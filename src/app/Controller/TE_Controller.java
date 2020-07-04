@@ -1,8 +1,7 @@
-package app;
+package app.Controller;
 
-import javafx.event.EventHandler;
+import app.Model.TE_Model;
 import javafx.scene.control.MenuBar;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -11,11 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.scene.control.TextArea;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.stage.FileChooser;
-import java.io.File;
+
+import javafx.stage.Stage;
 
 
 public class TE_Controller implements Initializable {
@@ -30,6 +26,7 @@ public class TE_Controller implements Initializable {
 
     private TE_Model model;
     private Scene scene;
+    private Stage stage;
 
     /** >>> CONSTRUCTOR <<< **/
     public TE_Controller(TE_Model model) {
@@ -45,22 +42,39 @@ public class TE_Controller implements Initializable {
         // Initialize is loaded last (access to loaded fxml), whereas constructor first (no fxml)
     }
 
-    public void handleScene(Scene scene) {
+    public void setAll(Stage stage, Scene scene) {
+        this.stage = stage;
         this.scene = scene;
+    }
 
+    public void handleAll() {
         /** Create group that collects text to display **/
         Group group = new Group();
-        int windowWidth = 800;
-        int windowHeight = (600-25);
 
         /** Handle Key Events **/
-        EventHandler<KeyEvent> keyEventHandler = new KeyEventHandler(group, windowWidth, windowHeight);
-        this.scene.setOnKeyPressed(keyEventHandler);
-        this.scene.setOnKeyTyped(keyEventHandler);
+        KeyEventHandler keyEventHandler = new KeyEventHandler(scene, group);
+        scene.setOnKeyPressed(keyEventHandler);
+        scene.setOnKeyTyped(keyEventHandler);
+
+        /** Handle Scene Changes **/
+        ResizeListener resizeListener = new ResizeListener(scene, stage);
+        resizeListener.updateChanged(keyEventHandler);
+
+        /**
+        ResizeListener listener = new ResizeListener(scene, stage);
+        scene.setOnMouseMoved(listener);
+        scene.setOnMousePressed(listener);
+        scene.setOnMouseDragged(listener);
+        **/
+
+        /** Handle Mouse Events **/
+        MouseEventHandler mouseEventHandler = new MouseEventHandler(scene, stage, keyEventHandler);
+        scene.setOnMousePressed(mouseEventHandler);
+        scene.setOnMouseClicked(mouseEventHandler);
+        scene.setOnMouseDragged(mouseEventHandler);
 
         /** Add group node to the root node to be displayed **/
-        this.rootFXML.getChildren().add(group);
-
+        rootFXML.getChildren().add(group);
     }
 
 
@@ -68,7 +82,7 @@ public class TE_Controller implements Initializable {
     /** ---------- CLASS METHODS - PRIVATE ---------- **/
     @FXML
     private void onOpen() {
-        //TO DO
+        model.openChosenFile(stage);
     }
 
     @FXML

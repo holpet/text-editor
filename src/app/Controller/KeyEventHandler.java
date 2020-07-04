@@ -1,8 +1,9 @@
-package app;
+package app.Controller;
 
 import javafx.event.EventHandler;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
@@ -15,16 +16,23 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
     int textCenterY;
 
     /** The Text to display on screen **/
-    public Text displayText = new Text(250, 250, "0");
+    public Text displayText;
     public int fontSize = 20;
     private String fontName = "Verdana";
 
-    public KeyEventHandler(final Group group, int windowWidth, int windowHeight) {
-        textCenterX = windowWidth / 2;
-        textCenterY = windowHeight / 2;
+    /** Other variables **/
+    public Scene scene;
+
+    public KeyEventHandler(Scene scene, final Group group) {
+        this.scene = scene;
+
+        // Calculate with initial (preferred) size of Scene
+        textCenterX = 800 / 2;
+        textCenterY = (600-25) / 2;
 
         // Initialize empty text and add it to root so it will be displayed
         displayText = new Text(textCenterX, textCenterY, "P");
+
         // Set position to VPos.TOP - assigned Y pos, highest across all letters
         displayText.setTextOrigin(VPos.TOP);
         displayText.setFont(Font.font(fontName, fontSize));
@@ -37,6 +45,7 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
     @Override
     public void handle(KeyEvent keyEvent) {
 
+        /** ALPHABET KEYS **/
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED) {
             String characterTyped = keyEvent.getCharacter();
             if (characterTyped.length() > 0 && characterTyped.charAt(0) != 8) {
@@ -44,25 +53,26 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
                 displayText.setText(characterTyped);
                 keyEvent.consume();
             }
+            updateBBox();
 
-            centerTextAndUpdateBoundingBox();
-
+        /** ARROW KEYS **/
         } else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED) {
             // for arrow keys
             KeyCode code = keyEvent.getCode();
             if (code == KeyCode.UP) {
                 fontSize += 5;
                 displayText.setFont(Font.font(fontName, fontSize));
-                centerTextAndUpdateBoundingBox();
+                updateBBox();
             } else if (code == KeyCode.DOWN) {
                 fontSize = Math.max(0, fontSize - 5);
                 displayText.setFont(Font.font(fontName, fontSize));
-                centerTextAndUpdateBoundingBox();
+                updateBBox();
             }
         }
     }
 
-    private void centerTextAndUpdateBoundingBox() {
+    public void updateBBox() {
+
         // Figure out the size of the current text
         double textHeight = displayText.getLayoutBounds().getHeight();
         double textWidth = displayText.getLayoutBounds().getWidth();
@@ -77,6 +87,8 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
 
         // Text to appear in front of other objects
         displayText.toFront();
+
     }
+
 
 }
