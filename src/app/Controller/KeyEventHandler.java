@@ -9,6 +9,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import java.security.Key;
+
 public class KeyEventHandler implements EventHandler<KeyEvent> {
 
     /** Handle Keys that get pressed **/
@@ -53,7 +55,6 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
                 displayText.setText(characterTyped);
                 keyEvent.consume();
             }
-            updateBBox();
 
         /** ARROW KEYS **/
         } else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED) {
@@ -62,13 +63,12 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             if (code == KeyCode.UP) {
                 fontSize += 5;
                 displayText.setFont(Font.font(fontName, fontSize));
-                updateBBox();
             } else if (code == KeyCode.DOWN) {
                 fontSize = Math.max(0, fontSize - 5);
                 displayText.setFont(Font.font(fontName, fontSize));
-                updateBBox();
             }
         }
+        updateBBox();
     }
 
     public void updateBBox() {
@@ -89,6 +89,5 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         displayText.toFront();
 
     }
-
 
 }

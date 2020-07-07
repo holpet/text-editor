@@ -1,13 +1,5 @@
 package app.Model;
 
-import javafx.event.EventHandler;
-import javafx.geometry.VPos;
-import javafx.scene.Group;
-import javafx.scene.control.Button;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -16,16 +8,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TE_Model {
+public class MenuModel {
 
     private Desktop desktop;
 
-    public TE_Model () {
+    public MenuModel() {
         this.desktop = Desktop.getDesktop();
     }
 
@@ -71,11 +61,21 @@ public class TE_Model {
         try {
             this.desktop.open(file);
         } catch (IOException ex) {
-            Logger.getLogger(TE_Model.class.getName()).log(
+            Logger.getLogger(MenuModel.class.getName()).log(
                     Level.SEVERE, null, ex
             );
         }
     }
+
+    /**
+    public void closeApp() {
+        KeyCombination keyCombinationWin = new KeyCodeCombination(KeyCode.F4, KeyCombination.ALT_DOWN);
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, event -> {
+                    if (keyCombinationWin.match(event) || event.getCode() == KeyCode.ESCAPE
+                    ) {
+                        new JavaApp().exit();
+                    }
+    }**/
 
 
     /**

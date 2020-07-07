@@ -1,6 +1,6 @@
 package app.Controller;
 
-import app.Model.TE_Model;
+import app.Model.MenuModel;
 import javafx.scene.control.MenuBar;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
@@ -14,7 +14,7 @@ import java.util.ResourceBundle;
 import javafx.stage.Stage;
 
 
-public class TE_Controller implements Initializable {
+public class MainController implements Initializable {
 
     /** ---------- CLASS VARIABLES AND CONSTRUCTOR ---------- **/
 
@@ -24,12 +24,12 @@ public class TE_Controller implements Initializable {
     @FXML
     private MenuBar menuFXML;
 
-    private TE_Model model;
+    private MenuModel model;
     private Scene scene;
     private Stage stage;
 
     /** >>> CONSTRUCTOR <<< **/
-    public TE_Controller(TE_Model model) {
+    public MainController(MenuModel model) {
         // To access additional methods in the model class
         this.model = model;
     }
@@ -56,22 +56,15 @@ public class TE_Controller implements Initializable {
         scene.setOnKeyPressed(keyEventHandler);
         scene.setOnKeyTyped(keyEventHandler);
 
-        /** Handle Scene Changes **/
-        ResizeListener resizeListener = new ResizeListener(scene, stage);
-        resizeListener.updateChanged(keyEventHandler);
-
-        /**
-        ResizeListener listener = new ResizeListener(scene, stage);
-        scene.setOnMouseMoved(listener);
-        scene.setOnMousePressed(listener);
-        scene.setOnMouseDragged(listener);
-        **/
-
         /** Handle Mouse Events **/
         MouseEventHandler mouseEventHandler = new MouseEventHandler(scene, stage, keyEventHandler);
         scene.setOnMousePressed(mouseEventHandler);
         scene.setOnMouseClicked(mouseEventHandler);
         scene.setOnMouseDragged(mouseEventHandler);
+
+        /** Handle Window Resize **/
+        ResizeListener resizeListener = new ResizeListener(scene, stage);
+        resizeListener.updateChanged(keyEventHandler);
 
         /** Add group node to the root node to be displayed **/
         rootFXML.getChildren().add(group);

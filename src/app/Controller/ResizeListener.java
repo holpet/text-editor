@@ -2,11 +2,16 @@ package app.Controller;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+
+import javafx.scene.robot.Robot;
 import java.lang.Number;
 
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
@@ -26,19 +31,18 @@ public class ResizeListener {
     public void updateChanged (KeyEventHandler keyEventHandler) {
         getSceneWidth(keyEventHandler);
         getSceneHeight(keyEventHandler);
-        keyEventHandler.updateBBox();
     }
 
-    private void getStageWidth() {
-        ChangeListener changeListener = new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean oldVal, Boolean newVal) {
-                System.out.println("System iconified: " + newVal);
-            }
-        };
-        stage.iconifiedProperty().addListener(changeListener);
+    private void robotKey () {
+        try {
+            Robot robot = new Robot();
+            robot.keyPress(KeyCode.F1);
+            robot.keyType(KeyCode.F1);
+            //System.out.println("Robot key pressed.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-
 
     private void getSceneWidth(KeyEventHandler keyEventHandler) {
         scene.widthProperty().addListener(new ChangeListener<Number>() {
@@ -46,6 +50,7 @@ public class ResizeListener {
             public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
                 keyEventHandler.textCenterX = newSceneWidth.intValue() / 2;
                 currentWidth = newSceneWidth.intValue();
+                robotKey();
                 System.out.println("Width: " + currentWidth);
             }
         });
@@ -57,6 +62,7 @@ public class ResizeListener {
             public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
                 currentHeight = newSceneHeight.intValue();
                 keyEventHandler.textCenterY = (newSceneHeight.intValue() - 25) / 2;
+                robotKey();
                 System.out.println("Height: " + currentHeight);
             }
         });

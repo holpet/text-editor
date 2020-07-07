@@ -1,7 +1,7 @@
 package app;
 
-import app.Controller.TE_Controller;
-import app.Model.TE_Model;
+import app.Controller.MainController;
+import app.Model.MenuModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,8 +18,8 @@ public class TextEditor extends Application {
 
         /** Load View and Controller **/
         FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/app/View/TE_View.fxml"));
-        TE_Controller controller = new TE_Controller(new TE_Model());
+        loader.setLocation(getClass().getResource("/app/View/UI.fxml"));
+        MainController controller = new MainController(new MenuModel());
         loader.setControllerFactory(t -> controller);
 
         /** Set Parent Root **/
