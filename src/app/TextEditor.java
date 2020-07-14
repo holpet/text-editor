@@ -1,7 +1,7 @@
 package app;
 
 import app.Controller.MainController;
-import app.Model.MenuModel;
+import app.Model.MenuMod;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,7 +19,7 @@ public class TextEditor extends Application {
         /** Load View and Controller **/
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/app/View/UI.fxml"));
-        MainController controller = new MainController(new MenuModel());
+        MainController controller = new MainController(new MenuMod());
         loader.setControllerFactory(t -> controller);
 
         /** Set Parent Root **/
@@ -32,6 +32,8 @@ public class TextEditor extends Application {
 
         /** Display the whole Scene (app) **/
         stage.setScene(scene);
+        stage.setMinWidth(300);
+        stage.setMinHeight(300);
         stage.show();
 
     }

@@ -1,7 +1,10 @@
 package app.Controller;
 
-import app.Model.MenuModel;
+import app.Model.MenuMod;
+import app.Model.*;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuBar;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -11,6 +14,7 @@ import javafx.scene.control.Alert;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 
@@ -22,14 +26,17 @@ public class MainController implements Initializable {
     private BorderPane rootFXML;
 
     @FXML
+    private AnchorPane anchor;
+
+    @FXML
     private MenuBar menuFXML;
 
-    private MenuModel model;
+    private MenuMod model;
     private Scene scene;
     private Stage stage;
 
     /** >>> CONSTRUCTOR <<< **/
-    public MainController(MenuModel model) {
+    public MainController(MenuMod model) {
         // To access additional methods in the model class
         this.model = model;
     }
@@ -56,15 +63,27 @@ public class MainController implements Initializable {
         scene.setOnKeyPressed(keyEventHandler);
         scene.setOnKeyTyped(keyEventHandler);
 
+        /** Handle Window Resize **/
+        ResizeListener resizeListener = new ResizeListener(scene, stage);
+        resizeListener.updateChanged(keyEventHandler);
+
         /** Handle Mouse Events **/
         MouseEventHandler mouseEventHandler = new MouseEventHandler(scene, stage, keyEventHandler);
         scene.setOnMousePressed(mouseEventHandler);
         scene.setOnMouseClicked(mouseEventHandler);
         scene.setOnMouseDragged(mouseEventHandler);
+        scene.setOnMouseReleased(mouseEventHandler);
 
-        /** Handle Window Resize **/
-        ResizeListener resizeListener = new ResizeListener(scene, stage);
-        resizeListener.updateChanged(keyEventHandler);
+        /** Get screen properties **/
+        // e.g. Rectangle2D [minX = 0.0, minY=0.0, maxX=1920.0, maxY=1080.0, width=1920.0, height=1080.0]
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        System.out.println(screenBounds);
+
+        /** Text Nodes **/
+        LinkedList ll = new LinkedList();
+        //ll.insert('2');
+
+        ll.showAll();
 
         /** Add group node to the root node to be displayed **/
         rootFXML.getChildren().add(group);

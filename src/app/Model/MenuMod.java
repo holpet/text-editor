@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MenuModel {
+public class MenuMod {
 
     private Desktop desktop;
 
-    public MenuModel() {
+    public MenuMod() {
         this.desktop = Desktop.getDesktop();
     }
 
@@ -61,7 +61,7 @@ public class MenuModel {
         try {
             this.desktop.open(file);
         } catch (IOException ex) {
-            Logger.getLogger(MenuModel.class.getName()).log(
+            Logger.getLogger(MenuMod.class.getName()).log(
                     Level.SEVERE, null, ex
             );
         }

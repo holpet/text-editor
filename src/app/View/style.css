@@ -1,0 +1,7 @@
+#pane {
+    -fx-background-color: grey ;
+}
+
+#innerPane {
+    -fx-background-color: white ;
+}

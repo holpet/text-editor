@@ -21,9 +21,15 @@ public class MouseEventHandler implements EventHandler<MouseEvent> {
     public void handle(MouseEvent mouseEvent) {
         System.out.println("Mouse pressed.");
 
-        /** RESIZE WINDOW -> CHANGE TEXT **/
-        ResizeListener resizeListener = new ResizeListener(scene, stage);
-        resizeListener.updateChanged(keyEventHandler);
+        if (    mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED ||
+                mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED ||
+                mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED ||
+                mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED) {
+
+            /** RESIZE WINDOW -> CHANGE TEXT **/
+            ResizeListener resizeListener = new ResizeListener(scene, stage);
+            resizeListener.robotKey();
+        }
 
     }
 }
