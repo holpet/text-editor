@@ -1,25 +1,27 @@
 package app;
 
 import app.Controller.MainController;
-import app.Model.MenuMod;
+import app.Controller.MenuHandler;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.jnativehook.NativeHookException;
+
 import java.io.IOException;
 
 
 public class TextEditor extends Application {
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) throws IOException, NativeHookException {
         stage.setTitle("Single Letter Display");
 
         /** Load View and Controller **/
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/app/View/UI.fxml"));
-        MainController controller = new MainController(new MenuMod());
+        MainController controller = new MainController();
         loader.setControllerFactory(t -> controller);
 
         /** Set Parent Root **/

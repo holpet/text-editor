@@ -4,7 +4,8 @@ import javafx.scene.Scene;
 import javafx.scene.text.Text;
 
 public class LinkedList {
-    public Node head;
+
+    private Node head;
     public Positioner positioner;
 
     public LinkedList() {
@@ -12,7 +13,47 @@ public class LinkedList {
         this.head = null;
     }
 
-    public void insertAtEnd (Text data) {
+    public Node getHead() {
+        return head;
+    }
+
+    public void setHead(Node head) {
+        this.head = head;
+    }
+
+
+
+    public Node getLast() {
+        if (head == null) {
+            return null;
+        }
+        else {
+            Node n = head;
+            while (n.next != null) {
+                n = n.next;
+            }
+            return n;
+        }
+    }
+
+    public void deleteAtCurrent(Node node) {
+        if (head == null || node == null) {
+            return;
+        }
+        if (head == node) {
+            head = node.next;
+        }
+        if (node.next != null) {
+            node.next.prev = node.prev;
+        }
+        if (node.prev != null) {
+            node.prev.next = node.next;
+        }
+        //System.out.println("Node deleted.");
+        return;
+    }
+
+    public void insertAtEnd(Text data) {
         Node node = new Node(data);
         /** include start of file from Positioner **/
 
@@ -20,7 +61,7 @@ public class LinkedList {
             head = node;
             positioner.length++;
             positioner.currentNode = head;
-            System.out.println("New head inserted.");
+            //System.out.println("New head inserted.");
         }
         else {
             // Insert new data at the end of the list
@@ -32,8 +73,9 @@ public class LinkedList {
             n.next = node;
             n.next.prev = n;
             positioner.currentNode = n.next;
-            System.out.println("New node inserted at END.");
+            //System.out.println("New node inserted at END.");
         }
+        return;
     }
 
     public void insertAtStart (Text data) {
@@ -75,6 +117,7 @@ public class LinkedList {
                 positioner.currentNode.next.prev = positioner.currentNode;
             }
         }
+        return;
     }
 
     public void showAll() {
@@ -88,6 +131,7 @@ public class LinkedList {
         else {
             System.out.println("No data has been added in a Node.");
         }
+        return;
     }
 
 }

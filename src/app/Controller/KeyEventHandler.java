@@ -1,9 +1,10 @@
 package app.Controller;
 
+import app.Model.Cursor;
 import app.Model.LinkedList;
 import app.Model.Node;
+import app.Model.Positioner;
 import javafx.event.EventHandler;
-import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -11,46 +12,45 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-import java.security.Key;
 
 public class KeyEventHandler implements EventHandler<KeyEvent> {
 
-    /** Handle Keys that get pressed **/
-    int textCenterX;
-    int textCenterY;
-    int textX;
-    int textY;
+    /** Screen properties **/
+    int currentWidth;
+    int currentHeight;
 
     /** The Text to display on screen **/
-    //public Text displayText;
     public LinkedList linkedText;
-    public Text displayText;
-    public int fontSize = 12;
-    private String fontName = "Verdana";
+    public int fontSize;
+    public String fontName;
 
     /** Other variables **/
     public Scene scene;
     public Group group;
+    public Positioner positioner;
+    public TextRenderer textRenderer;
+    public Cursor cursor;
 
-    public KeyEventHandler(Scene scene, final Group group) {
+    public KeyEventHandler(Scene scene, Group group) {
         this.scene = scene;
         this.group = group;
+        this.positioner = new Positioner();
         this.linkedText = new LinkedList();
 
-        // Calculate with initial (preferred) size of Scene
-        textX = 0;
-        textY = 25;
+        // Set original text properties and use sample letter to set cursor
+        fontSize = 12;
+        fontName = "Verdana";
+        Text sampleLetter = new Text("A");
+        sampleLetter.setFont(Font.font(fontName, fontSize));
 
-        // Initialize empty text and add it to root so it will be displayed
-        displayText = new Text(textCenterX, textCenterY, "P");
+        this.cursor = new Cursor(0, 0, sampleLetter);
+        group.getChildren().add(cursor.getStyleableNode());
 
+        this.textRenderer = new TextRenderer(scene, group, linkedText, positioner, cursor);
 
-        // Set position to VPos.TOP - assigned Y pos, highest across all letters
-        displayText.setTextOrigin(VPos.TOP);
-        displayText.setFont(Font.font(fontName, fontSize));
-
-        // Add all Nodes to the root to be displayed
-        group.getChildren().add(displayText);
+        // Set current width and height
+        currentWidth = scene.widthProperty().intValue();
+        currentHeight = scene.heightProperty().intValue();
 
     }
 
@@ -62,103 +62,50 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             String characterTyped = keyEvent.getCharacter();
             if (characterTyped.length() > 0 && characterTyped.charAt(0) != 8) {
                 // Ignore control keys and backspace (non-zero length)
-                displayText.setText(characterTyped);
 
+                // SET TEXT PROPERTIES
                 Text letter = new Text();
                 letter.setText(characterTyped);
-                linkedText.insertAtEnd(letter);
-                linkedText.showAll();
+                letter.setFont(Font.font(fontName, fontSize));
 
-                keyEvent.consume();
+                // INSERT IT INTO A LINKED LIST
+                linkedText.insertAtEnd(letter);
+                //linkedText.showAll();
             }
 
-        /** ARROW KEYS **/
+        /** ARROW, CTRL, DELETE KEYS ETC. **/
         } else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED) {
             // for arrow keys
             KeyCode code = keyEvent.getCode();
+
+            if (code == KeyCode.CAPS) {
+                //System.out.println("Caps pressed.");
+            }
+
             if (code == KeyCode.UP) {
                 fontSize += 5;
-                displayText.setFont(Font.font(fontName, fontSize));
+                //displayText.setFont(Font.font(fontName, fontSize));
             } else if (code == KeyCode.DOWN) {
                 fontSize = Math.max(0, fontSize - 5);
-                displayText.setFont(Font.font(fontName, fontSize));
+                //displayText.setFont(Font.font(fontName, fontSize));
+            }
+            else if (code == KeyCode.BACK_SPACE) {
+                // DELETE LETTER
+                // find out last member of linked list
+                Node last = linkedText.getLast();
+                linkedText.deleteAtCurrent(last);
+                //linkedText.showAll();
+                if (last != null) {
+                    textRenderer.deleteLetter(last.data);
+                }
             }
         }
-        centerText();
+        // RENDER NEW TEXT
+        textRenderer.renderText();
+        keyEvent.consume();
     }
 
 
-    public void renderText() {
-        Node tmp = linkedText.head;
-        if (tmp == null) {
-            System.out.println("No text to be rendered.");
-            return;
-        }
 
-        // Initial variables
-        //int sceneWidth = resizeListener.currentWidth;
-        //int sceneHeight = resizeListener.currentHeight;
-        int posX = 0;
-        int posY = 0;
-
-        while (tmp != null) {
-            // figure out letter size and position of a letter
-            // leftText() // centerText() // rightText()
-            double letterWidth = tmp.data.getLayoutBounds().getWidth();
-            double letterHeight = tmp.data.getLayoutBounds().getHeight();
-            tmp.data.setX(letterWidth);
-            tmp.data.setY(letterHeight);
-            tmp.data.toFront();
-            group.getChildren().add(tmp.data);
-
-            tmp = tmp.next;
-
-            // solve end of line
-            posX += letterWidth;
-            //posY += letterHeight;
-
-        }
-    }
-
-    public void centerText() {
-
-        // Figure out the size of the current text
-        double textHeight = displayText.getLayoutBounds().getHeight();
-        double textWidth = displayText.getLayoutBounds().getWidth();
-
-        // Calculate pos so the text will be centered on screen
-        double textTop = textCenterY - textHeight / 2;
-        double textLeft = textCenterX - textWidth / 2;
-
-        // Repos text
-        displayText.setX(textLeft);
-        displayText.setY(textTop);
-
-        // Text to appear in front of other objects
-        displayText.toFront();
-
-    }
-
-    public void leftText() {
-        // Figure out the size of the current text
-        double textHeight = displayText.getLayoutBounds().getHeight();
-        double textWidth = displayText.getLayoutBounds().getWidth();
-
-        // Calculate pos so the text will be pushed to the left on screen
-        //double textTop = textCenterY - textHeight / 2;
-        //double textLeft = textCenterX - textWidth / 2;
-
-        // Repos text
-        //displayText.setX(textLeft);
-        //displayText.setY(textTop);
-
-        // Text to appear in front of other objects
-        displayText.toFront();
-
-    }
-
-    public void rightText() {
-        //TO DO
-    }
 
 }

@@ -1,4 +1,4 @@
-package app.Model;
+package app.Controller;
 
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MenuMod {
+public class MenuHandler {
 
     private Desktop desktop;
 
-    public MenuMod() {
+    public MenuHandler() {
         this.desktop = Desktop.getDesktop();
     }
 
@@ -61,7 +61,7 @@ public class MenuMod {
         try {
             this.desktop.open(file);
         } catch (IOException ex) {
-            Logger.getLogger(MenuMod.class.getName()).log(
+            Logger.getLogger(MenuHandler.class.getName()).log(
                     Level.SEVERE, null, ex
             );
         }

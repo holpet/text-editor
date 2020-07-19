@@ -33,8 +33,19 @@
     </MenuBar>
 </top>
    <center>
-      <ScrollPane id="pane" fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" stylesheets="@style.css" BorderPane.alignment="CENTER" />
+      <ScrollPane fx:id="centerSpace" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="500.0" prefWidth="500.0" vbarPolicy="ALWAYS" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
+      </ScrollPane>
    </center>
+
 
 
 </BorderPane>

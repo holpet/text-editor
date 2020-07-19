@@ -1,10 +1,9 @@
 package app.Controller;
 
-import app.Model.MenuMod;
-import app.Model.*;
+import app.Model.Cursor;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuBar;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,32 +12,34 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.jnativehook.GlobalScreen;
+import org.jnativehook.NativeHookException;
 
 
 public class MainController implements Initializable {
 
-    /** ---------- CLASS VARIABLES AND CONSTRUCTOR ---------- **/
-
     @FXML /** ROOT **/
     private BorderPane rootFXML;
 
-    @FXML
-    private AnchorPane anchor;
+    @FXML /** Scrollable space for text **/
+    private ScrollPane centerSpace;
 
     @FXML
     private MenuBar menuFXML;
 
-    private MenuMod model;
+    private MenuHandler model;
     private Scene scene;
     private Stage stage;
 
-    /** >>> CONSTRUCTOR <<< **/
-    public MainController(MenuMod model) {
+    public MainController() {
         // To access additional methods in the model class
-        this.model = model;
+        this.model = new MenuHandler();
     }
 
 
@@ -47,6 +48,11 @@ public class MainController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // Initialize is loaded last (access to loaded fxml), whereas constructor first (no fxml)
+        // Clear previous logging configurations.
+        LogManager.getLogManager().reset();
+        // Get the logger for "org.jnativehook" and set the level to off.
+        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+        logger.setLevel(Level.OFF);
     }
 
     public void setAll(Stage stage, Scene scene) {
@@ -63,30 +69,36 @@ public class MainController implements Initializable {
         scene.setOnKeyPressed(keyEventHandler);
         scene.setOnKeyTyped(keyEventHandler);
 
-        /** Handle Window Resize **/
-        ResizeListener resizeListener = new ResizeListener(scene, stage);
-        resizeListener.updateChanged(keyEventHandler);
-
         /** Handle Mouse Events **/
+        try {
+            GlobalScreen.registerNativeHook();
+        }
+        catch(NativeHookException e) {
+            System.out.println("Native Mouse Hook couldn't be registered.");
+            System.out.println(e.getMessage());
+        }
         MouseEventHandler mouseEventHandler = new MouseEventHandler(scene, stage, keyEventHandler);
         scene.setOnMousePressed(mouseEventHandler);
         scene.setOnMouseClicked(mouseEventHandler);
         scene.setOnMouseDragged(mouseEventHandler);
         scene.setOnMouseReleased(mouseEventHandler);
+        GlobalScreen.addNativeMouseListener(mouseEventHandler);
+        GlobalScreen.addNativeMouseMotionListener(mouseEventHandler);
+
+
+        /** Handle Window Resize **/
+        ResizeListener resizeListener = new ResizeListener(scene);
+        resizeListener.updateChanged(keyEventHandler);
 
         /** Get screen properties **/
         // e.g. Rectangle2D [minX = 0.0, minY=0.0, maxX=1920.0, maxY=1080.0, width=1920.0, height=1080.0]
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         System.out.println(screenBounds);
 
-        /** Text Nodes **/
-        LinkedList ll = new LinkedList();
-        //ll.insert('2');
 
-        ll.showAll();
-
-        /** Add group node to the root node to be displayed **/
-        rootFXML.getChildren().add(group);
+        /** Add group node to be displayed **/
+        //rootFXML.getChildren().add(group);
+        centerSpace.setContent(group);
     }
 
 

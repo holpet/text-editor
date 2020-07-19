@@ -1,19 +1,24 @@
 package app.Controller;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import org.jnativehook.mouse.NativeMouseEvent;
+import org.jnativehook.mouse.NativeMouseInputListener;
 
-public class MouseEventHandler implements EventHandler<MouseEvent> {
+public class MouseEventHandler implements EventHandler<MouseEvent>, NativeMouseInputListener {
     public Scene scene;
     public Stage stage;
     public KeyEventHandler keyEventHandler;
+    public ResizeListener resizeListener;
 
     public MouseEventHandler(Scene scene, Stage stage, KeyEventHandler keyEventHandler) {
         this.scene = scene;
         this.stage = stage;
         this.keyEventHandler = keyEventHandler;
+        this.resizeListener = new ResizeListener(scene);
     }
 
 
@@ -26,10 +31,34 @@ public class MouseEventHandler implements EventHandler<MouseEvent> {
                 mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED ||
                 mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED) {
 
-            /** RESIZE WINDOW -> CHANGE TEXT **/
-            ResizeListener resizeListener = new ResizeListener(scene, stage);
-            resizeListener.robotKey();
         }
+
+    }
+
+    @Override
+    public void nativeMouseClicked(NativeMouseEvent nativeMouseEvent) {
+
+    }
+
+    @Override
+    public void nativeMousePressed(NativeMouseEvent nativeMouseEvent) {
+
+    }
+
+    @Override
+    public void nativeMouseReleased(NativeMouseEvent nativeMouseEvent) {
+        Platform.runLater(()->{
+            resizeListener.robotKey();
+        });
+    }
+
+    @Override
+    public void nativeMouseMoved(NativeMouseEvent nativeMouseEvent) {
+
+    }
+
+    @Override
+    public void nativeMouseDragged(NativeMouseEvent nativeMouseEvent) {
 
     }
 }
