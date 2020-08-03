@@ -1,137 +1,170 @@
 package app.Model;
 
-import javafx.scene.Scene;
-import javafx.scene.text.Text;
+import app.Controller.Positioner;
+
+import java.util.HashMap;
 
 public class LinkedList {
 
-    private Node head;
-    public Positioner positioner;
+    //private Node head;
+    private Node sentinelHead;
+    private Node sentinelTail;
+    private double size;
+    public HashMap<MyText, Node> hashMap;
 
-    public LinkedList() {
-        this.positioner = new Positioner();
-        this.head = null;
+    public LinkedList(HashMap<MyText, Node> hashMap) {
+        //this.head = null;
+        this.sentinelHead = new Node(null);
+        this.sentinelTail = new Node(null);
+        sentinelHead.setNext(sentinelTail);
+        sentinelTail.setPrev(sentinelHead);
+        this.size = 0;
+        this.hashMap = hashMap;
     }
 
-    public Node getHead() {
-        return head;
-    }
-
-    public void setHead(Node head) {
-        this.head = head;
-    }
-
-
-
-    public Node getLast() {
-        if (head == null) {
-            return null;
-        }
-        else {
-            Node n = head;
-            while (n.next != null) {
-                n = n.next;
-            }
-            return n;
-        }
-    }
-
-    public void deleteAtCurrent(Node node) {
-        if (head == null || node == null) {
-            return;
-        }
-        if (head == node) {
-            head = node.next;
-        }
-        if (node.next != null) {
-            node.next.prev = node.prev;
-        }
-        if (node.prev != null) {
-            node.prev.next = node.next;
-        }
-        //System.out.println("Node deleted.");
-        return;
-    }
-
-    public void insertAtEnd(Text data) {
+//    public Node getHead() {
+//        return head;
+//    }
+    /**
+    public Node insertAtEnd(MyText data) {
         Node node = new Node(data);
-        /** include start of file from Positioner **/
 
         if (head == null) {
             head = node;
-            positioner.length++;
-            positioner.currentNode = head;
-            //System.out.println("New head inserted.");
         }
         else {
             // Insert new data at the end of the list
             Node n = head;
-            while (n.next != null) {
-                positioner.length++;
-                n = n.next;
+            while (n.getNext() != null) {
+                n = n.getNext();
             }
-            n.next = node;
-            n.next.prev = n;
-            positioner.currentNode = n.next;
-            //System.out.println("New node inserted at END.");
+            n.setNext(node);
+            n.getNext().setPrev(n);
         }
-        return;
-    }
+        hashMap.put(data, node);
+        return node;
+    }**/
 
-    public void insertAtStart (Text data) {
-        Node newHead = new Node(data);
-        if (head == null) {
-            head = newHead;
-            positioner.length++;
-            positioner.currentNode = head;
-            System.out.println("New head inserted.");
-        }
-        else {
-            Node oldHead = head;
-            newHead.next = oldHead;
-            head = newHead;
-            newHead.next.prev = newHead;
-            positioner.length++;
-            positioner.currentNode = head;
-            System.out.println("New node inserted at the START. New head created.");
-        }
-    }
-
-    public void insertAtCurrent (Text data) {
+    public void insertAt(MyText data, Positioner positioner) {
         Node node = new Node(data);
-
-        if (positioner.currentNode == null) {
-            // If there is no current node (cursor) simply insert data at the end of the list
-            insertAtEnd(data);
+        if (isEmpty()) {
+            sentinelHead.setNext(node);
+            sentinelTail.setPrev(node);
+            node.setNext(getSentinelTail());
+            node.setPrev(getSentinelHead());
+            positioner.setCursorIsAtStart(false);
         }
         else {
-            // Use current node (cursor) to insert new data at position
-            if (positioner.currentNode.next == null) {
-                positioner.currentNode.next = node;
-                positioner.currentNode.next.prev = positioner.currentNode;
+            // Insert new data at current pos
+            Node currentNode = positioner.getCurrentNode();
+            //positioner.setCursorIsAtStart(false);
+            if (positioner.getCursorIsAtStart()) {
+                if (currentNode != null) {
+                    currentNode.setPrev(node);
+                    node.setNext(currentNode);
+                    node.setPrev(getSentinelHead());
+                    sentinelHead.setNext(node);
+                }
+                positioner.setCursorIsAtStart(false);
             }
             else {
-                Node temp = positioner.currentNode.next;
-                positioner.currentNode.next = node;
-                positioner.currentNode.next.next = temp;
-                positioner.currentNode.next.prev = positioner.currentNode;
+                if (currentNode != null) {
+                    Node oldCurNext = currentNode.getNext();
+                    currentNode.setNext(node);
+                    node.setPrev(currentNode);
+                    node.setNext(oldCurNext);
+                }
             }
         }
-        return;
+        positioner.setCurrentNode(node);
+        size++;
+        hashMap.put(data, node);
     }
 
-    public void showAll() {
-        Node temp = head;
+    public void deleteAt(Node node, Positioner positioner) {
+        // Delete current node and return the one that becomes the new current node
+        if (isEmpty() || node == null) {
+            return;
+        }
+        if (getFirst() == node) {
+            if (positioner.getCursorIsAtStart()) {
+                // Cursor is at the beginning, don't delete anything
+                positioner.setCursorIsAtStart(true);
+                return;
+            }
+            else {
+                // Delete first node and set cursor at beginning
+                sentinelHead.setNext(node.getNext());
+                node.getNext().setPrev(getSentinelHead());
+                positioner.setCursorIsAtStart(true);
+                positioner.updatePosition();
+                positioner.setCurrentNode(getFirst());
+                size--;
+                hashMap.remove(node.getData());
+                return;
+            }
+        }
+        if (node.getNext() != getSentinelTail()) {
+            node.getNext().setPrev(node.getPrev());
+        }
+        if (node.getPrev() != getSentinelHead()) {
+            node.getPrev().setNext(node.getNext());
+        }
+        positioner.setCurrentNode(node.getPrev());
+        positioner.setCursorIsAtStart(false);
+        positioner.updatePosition();
+        size--;
+        hashMap.remove(node.getData());
+    }
+
+    public void printAll() {
+        Node temp = getFirst();
         if (temp != null) {
             while (temp != null) {
-                System.out.println(temp.data + " added. ");
-                temp = temp.next;
+                System.out.println(temp.getData() + " added. ");
+                temp = temp.getNext();
             }
         }
         else {
             System.out.println("No data has been added in a Node.");
         }
-        return;
     }
 
+    public double getSize() {
+        return size;
+    }
+
+    public Boolean isEmpty() {
+        return size == 0;
+    }
+
+    public Node getFirst() {
+        if (isEmpty()) {
+            return null;
+        }
+        return sentinelHead.getNext();
+    }
+
+    public Node getLast() {
+        if (isEmpty()) {
+            return null;
+        }
+        return sentinelTail.getPrev();
+    }
+
+    public Boolean isAtEnd(Node node) {
+        return getSentinelTail() == node;
+    }
+
+    public Boolean isAtBeginning(Node node) {
+        return getSentinelHead() == node;
+    }
+
+    public Node getSentinelHead() {
+        return sentinelHead;
+    }
+
+    public Node getSentinelTail() {
+        return sentinelHead;
+    }
 }

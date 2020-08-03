@@ -1,26 +1,22 @@
 package app.Controller;
 
-import app.Model.Cursor;
-import app.Model.LinkedList;
-import app.Model.Node;
-import app.Model.Positioner;
+import app.Model.*;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
+
+import java.io.*;
+import java.util.HashMap;
 
 
 public class KeyEventHandler implements EventHandler<KeyEvent> {
 
-    /** Screen properties **/
-    int currentWidth;
-    int currentHeight;
-
     /** The Text to display on screen **/
     public LinkedList linkedText;
+    public HashMap<MyText, Node> hashMap;
     public int fontSize;
     public String fontName;
 
@@ -34,24 +30,56 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
     public KeyEventHandler(Scene scene, Group group) {
         this.scene = scene;
         this.group = group;
-        this.positioner = new Positioner();
-        this.linkedText = new LinkedList();
+        this.hashMap = new HashMap<>();
+        this.linkedText = new LinkedList(hashMap);
 
-        // Set original text properties and use sample letter to set cursor
-        fontSize = 12;
-        fontName = "Verdana";
-        Text sampleLetter = new Text("A");
-        sampleLetter.setFont(Font.font(fontName, fontSize));
-
-        this.cursor = new Cursor(0, 0, sampleLetter);
+        this.cursor = new Cursor();
         group.getChildren().add(cursor.getStyleableNode());
 
+        this.positioner = new Positioner(cursor, linkedText);
         this.textRenderer = new TextRenderer(scene, group, linkedText, positioner, cursor);
 
-        // Set current width and height
-        currentWidth = scene.widthProperty().intValue();
-        currentHeight = scene.heightProperty().intValue();
+        this.fontSize = 12;
+        this.fontName = "Verdana";
 
+        // READ FILE
+        //readTextFromFile("./txt/text_lorem_ipsum.txt");
+    }
+
+    private void readTextFromFile(String filename) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF8"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                for (int i = 0; i < line.length(); i++) {
+                    createLetter( ( "" + line.charAt(i) ) );
+                }
+            }
+            br.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void handleText() {
+        textRenderer.renderText();
+    }
+
+    public void createLetter(String letter) {
+        MyText text = new MyText();
+        text.setText(letter);
+        text.setFont(Font.font(fontName, fontSize));
+        // Insert node into linkedList, update position and save it in a hashMap
+        linkedText.insertAt(text, positioner);
+    }
+
+    public void deleteLetter() {
+        Node oldCurrentNode = positioner.getCurrentNode();
+        if (oldCurrentNode != null) {
+            linkedText.deleteAt(oldCurrentNode, positioner);
+            group.getChildren().remove(oldCurrentNode.getData());
+        }
     }
 
     @Override
@@ -62,15 +90,7 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             String characterTyped = keyEvent.getCharacter();
             if (characterTyped.length() > 0 && characterTyped.charAt(0) != 8) {
                 // Ignore control keys and backspace (non-zero length)
-
-                // SET TEXT PROPERTIES
-                Text letter = new Text();
-                letter.setText(characterTyped);
-                letter.setFont(Font.font(fontName, fontSize));
-
-                // INSERT IT INTO A LINKED LIST
-                linkedText.insertAtEnd(letter);
-                //linkedText.showAll();
+                createLetter(characterTyped);
             }
 
         /** ARROW, CTRL, DELETE KEYS ETC. **/
@@ -78,30 +98,21 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             // for arrow keys
             KeyCode code = keyEvent.getCode();
 
-            if (code == KeyCode.CAPS) {
-                //System.out.println("Caps pressed.");
-            }
-
             if (code == KeyCode.UP) {
                 fontSize += 5;
                 //displayText.setFont(Font.font(fontName, fontSize));
-            } else if (code == KeyCode.DOWN) {
+            }
+            if (code == KeyCode.DOWN) {
                 fontSize = Math.max(0, fontSize - 5);
                 //displayText.setFont(Font.font(fontName, fontSize));
             }
-            else if (code == KeyCode.BACK_SPACE) {
-                // DELETE LETTER
-                // find out last member of linked list
-                Node last = linkedText.getLast();
-                linkedText.deleteAtCurrent(last);
-                //linkedText.showAll();
-                if (last != null) {
-                    textRenderer.deleteLetter(last.data);
-                }
+
+            if (code == KeyCode.BACK_SPACE) {
+                deleteLetter();
             }
         }
         // RENDER NEW TEXT
-        textRenderer.renderText();
+        handleText();
         keyEvent.consume();
     }
 

@@ -3,7 +3,6 @@ package app.Controller;
 import app.Model.*;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.text.Text;
 
 public class TextRenderer {
 
@@ -21,43 +20,40 @@ public class TextRenderer {
         this.cursor = cursor;
     }
 
-    public void deleteLetter(Text letter) {
-        group.getChildren().remove(letter);
-    }
-
     public void renderText() {
-        Node tmp = linkedText.getHead();
-        if (tmp == null) {
-            //System.out.println("No text to be rendered.");
+
+        /** No text to render **/
+        Node tmp = linkedText.getFirst();
+        if (linkedText.isEmpty()) {
             return;
         }
 
+        /** Start rendering text from the first letter **/
         // Initial variables
-        int posX = positioner.getPaddX();
-        int posY = positioner.getPaddY();
+        int posX = 0;
+        int posY = 0;
 
-        while (tmp != null) {
+        while (!linkedText.isAtEnd(tmp)) {
             // figure out letter size and position of a letter
             // leftText() // centerText() // rightText()
-            double letterWidth = tmp.data.getLayoutBounds().getWidth();
-            double letterHeight = tmp.data.getLayoutBounds().getHeight();
-            int nextLetterWidth = 0;
-            if (tmp.next != null) {
-                nextLetterWidth = (int)tmp.next.data.getLayoutBounds().getWidth();
+            double letterWidth = tmp.getData().getLayoutBounds().getWidth();
+            double letterHeight = tmp.getData().getLayoutBounds().getHeight();
+            double nextLetterWidth = 0;
+            if (!linkedText.isAtEnd(tmp.getNext())) {
+                nextLetterWidth = tmp.getNext().getData().getLayoutBounds().getWidth();
             }
 
-            tmp.data.setX(posX);
-            tmp.data.setY(posY);
+            tmp.getData().setX(posX);
+            tmp.getData().setY(posY);
             //tmp.data.toFront();
 
-            // SET NEW CURSOR COORDS
-            cursor.changeCursorPos( (posX+letterWidth), (posY-letterHeight) );
-
-            if (!group.getChildren().contains(tmp.data)) {
-                group.getChildren().add(tmp.data);
+            if (!group.getChildren().contains(tmp.getData())) {
+                group.getChildren().add(tmp.getData());
+                // Set cursor position when writing
+                positioner.updatePosition();
             }
-            if (tmp.next != null) {
-                tmp = tmp.next;
+            if (!linkedText.isAtEnd(tmp.getNext())) {
+                tmp = tmp.getNext();
             }
             else {
                 return;
@@ -67,9 +63,11 @@ public class TextRenderer {
             posY = nodeAndCoords.getCoordY();
             tmp = nodeAndCoords.getNode();
         }
+        // Set cursor position
+        positioner.updatePosition();
     }
 
-    public Boolean checkLineEnd(int newCoordX, int nextLetterWidth, int sceneWidth) {
+    public Boolean checkLineEnd(int newCoordX, double nextLetterWidth, int sceneWidth) {
         int leftSpace = 52;
         if ((newCoordX + nextLetterWidth) >= (sceneWidth - leftSpace)) {
             return true;
@@ -77,7 +75,7 @@ public class TextRenderer {
         return false;
     }
 
-    public NodeAndCoords handleLines(Node node, int nextLetterWidth, double letterWidth, double letterHeight, int initCoordX, int initCoordY) {
+    public NodeAndCoords handleLines(Node node, double nextLetterWidth, double letterWidth, double letterHeight, int initCoordX, int initCoordY) {
         int newCoordX = 0;
         int newCoordY = 0;
         NodeAndCoords nodeAndCoords = new NodeAndCoords(newCoordX, newCoordY, node);
@@ -90,7 +88,7 @@ public class TextRenderer {
         // If next letter doesn't fit on the line:
         if (checkLineEnd(newCoordX, nextLetterWidth, sceneWidth)) {
             // If next letter is space:
-            if (node.data.getText().equals(" ")) {
+            if (node.getData().getText().equals(" ")) {
                 // Add space on the line
                 nodeAndCoords.setCoordX(newCoordX);
                 nodeAndCoords.setCoordY(initCoordY);
@@ -99,18 +97,17 @@ public class TextRenderer {
             // If next letter isn't space:
             else {
                 // Move the word next letter is part of onto a new line
-                while (node.prev != null) {
+                while (node.getPrev() != null) {
                     // Search backwards until you find space indicating the beginning of the word
-                    if (node.prev.data.getText().equals(" ")) {
+                    if (node.getPrev().getData().getText().equals(" ")) {
                         nodeAndCoords.setNode(node);
                         nodeAndCoords.setCoordX(0);
                         nodeAndCoords.setCoordY((initCoordY + (int)letterHeight));
                         return nodeAndCoords;
                     }
                     // Move onto the previous node
-                    node = node.prev;
+                    node = node.getPrev();
                 }
-
             }
         }
         // If next letter fits on the line:

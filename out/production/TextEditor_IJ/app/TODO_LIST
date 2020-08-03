@@ -1,0 +1,6 @@
+/** SelectionHandler */
+        /* TODO
+        doOnMousePressed:
+        - Click anywhere on the ScrollPane results in cursor moving to the nearest letter/node and currentNode is changed accordingly
+        */
+

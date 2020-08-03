@@ -4,6 +4,7 @@ import app.Model.Cursor;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -28,18 +29,19 @@ public class MainController implements Initializable {
     private BorderPane rootFXML;
 
     @FXML /** Scrollable space for text **/
-    private ScrollPane centerSpace;
+    private ScrollPane textWindow;
 
     @FXML
     private MenuBar menuFXML;
 
-    private MenuHandler model;
+    private MenuHandler menu;
     private Scene scene;
     private Stage stage;
+    private KeyEventHandler keyEventHandler;
 
     public MainController() {
         // To access additional methods in the model class
-        this.model = new MenuHandler();
+        this.menu = new MenuHandler();
     }
 
 
@@ -65,7 +67,7 @@ public class MainController implements Initializable {
         Group group = new Group();
 
         /** Handle Key Events **/
-        KeyEventHandler keyEventHandler = new KeyEventHandler(scene, group);
+        this.keyEventHandler = new KeyEventHandler(scene, group);
         scene.setOnKeyPressed(keyEventHandler);
         scene.setOnKeyTyped(keyEventHandler);
 
@@ -85,10 +87,15 @@ public class MainController implements Initializable {
         GlobalScreen.addNativeMouseListener(mouseEventHandler);
         GlobalScreen.addNativeMouseMotionListener(mouseEventHandler);
 
+        SelectionHandler selectionHandler = new SelectionHandler(group, keyEventHandler);
+        textWindow.addEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
+
 
         /** Handle Window Resize **/
+        /**
         ResizeListener resizeListener = new ResizeListener(scene);
         resizeListener.updateChanged(keyEventHandler);
+         **/
 
         /** Get screen properties **/
         // e.g. Rectangle2D [minX = 0.0, minY=0.0, maxX=1920.0, maxY=1080.0, width=1920.0, height=1080.0]
@@ -98,15 +105,18 @@ public class MainController implements Initializable {
 
         /** Add group node to be displayed **/
         //rootFXML.getChildren().add(group);
-        centerSpace.setContent(group);
+        textWindow.setContent(group);
     }
 
+    public void readTextFile() {
+        keyEventHandler.handleText();
+    }
 
 
     /** ---------- CLASS METHODS - PRIVATE ---------- **/
     @FXML
     private void onOpen() {
-        model.openChosenFile(stage);
+        menu.openChosenFile(stage);
     }
 
     @FXML

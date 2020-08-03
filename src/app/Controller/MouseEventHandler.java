@@ -1,6 +1,5 @@
 package app.Controller;
 
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
@@ -12,24 +11,24 @@ public class MouseEventHandler implements EventHandler<MouseEvent>, NativeMouseI
     public Scene scene;
     public Stage stage;
     public KeyEventHandler keyEventHandler;
-    public ResizeListener resizeListener;
 
     public MouseEventHandler(Scene scene, Stage stage, KeyEventHandler keyEventHandler) {
         this.scene = scene;
         this.stage = stage;
         this.keyEventHandler = keyEventHandler;
-        this.resizeListener = new ResizeListener(scene);
     }
 
 
     @Override
     public void handle(MouseEvent mouseEvent) {
-        System.out.println("Mouse pressed.");
+        //System.out.println("Mouse pressed.");
 
         if (    mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED ||
                 mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED ||
                 mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED ||
                 mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED) {
+
+            //keyEventHandler.positioner.updateCursor();
 
         }
 
@@ -47,9 +46,8 @@ public class MouseEventHandler implements EventHandler<MouseEvent>, NativeMouseI
 
     @Override
     public void nativeMouseReleased(NativeMouseEvent nativeMouseEvent) {
-        Platform.runLater(()->{
-            resizeListener.robotKey();
-        });
+        // Always renders text (in case window has been resized and text has to be adjusted to the new size)
+        //keyEventHandler.handleText();
     }
 
     @Override

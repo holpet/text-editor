@@ -4,8 +4,6 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.robot.Robot;
 import java.lang.Number;
 import java.util.Timer;
@@ -64,11 +62,6 @@ public class ResizeListener {
                     public void run() {
                         currentWidth = newSceneWidth.intValue();
                         System.out.println("Width: " + currentWidth);
-                        // update UI ** RESIZE CODE //
-                        keyEventHandler.currentWidth = newSceneWidth.intValue();
-                        Platform.runLater(()->{
-                            robotKey();
-                        });
                     }
                 };
                 timer.schedule(task, delayTime);
@@ -94,11 +87,6 @@ public class ResizeListener {
                     public void run() {
                         currentHeight = newSceneHeight.intValue();
                         System.out.println("Height: " + currentHeight);
-                        // update UI ** RESIZE CODE //
-                        keyEventHandler.currentHeight = newSceneHeight.intValue();
-                        Platform.runLater(()->{
-                            robotKey();
-                        });
                     }
                 };
                 timer.schedule(task, delayTime);

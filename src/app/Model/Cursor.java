@@ -1,11 +1,14 @@
 package app.Model;
 
+import app.Controller.Positioner;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+
+import java.util.HashMap;
 
 public class Cursor extends Node {
 
@@ -15,12 +18,19 @@ public class Cursor extends Node {
     private double curWidth;
     private double curHeight;
     private Boolean isRunning;
-    private Text sampleLetter;
+    private MyText sampleLetter;
     private Thread cursorThread;
 
-    public Cursor(double curX, double curY, Text sampleLetter) {
-        this.curX = curX;
-        this.curY = curY;
+    public Cursor() {
+        this.curX = 0;
+        this.curY = 0;
+
+        // Set original text properties and use sample letter to set cursor
+        int fontSize = 12;
+        String fontName = "Verdana";
+        MyText sampleLetter = new MyText();
+        sampleLetter.setText("A");
+        sampleLetter.setFont(Font.font(fontName, fontSize));
         this.sampleLetter = sampleLetter;
 
         // Set cursor EndX, EndY
@@ -46,6 +56,7 @@ public class Cursor extends Node {
         cursor.setFill(Color.BLACK);
         isRunning = true;
     }
+
     public void stopCursorBlinking() {
         isRunning = false;
     }
@@ -78,7 +89,7 @@ public class Cursor extends Node {
         // 10% of letter width is cursor width
         long newLetterWidth = Math.round((letterWidth * 0.1));
         // 10% more of cursor height than given letter size
-        long newLetterHeight = Math.round( letterHeight + letterHeight * 0.1);
+        long newLetterHeight = Math.round(letterHeight);
 
         setCurWidth(newLetterWidth);
         setCurHeight(newLetterHeight);
@@ -99,7 +110,7 @@ public class Cursor extends Node {
         startCursorBlinking();
     }
 
-    public void changeCursorSize(Text newSampleText) {
+    public void changeCursorSize(MyText newSampleText) {
         // based on new font / size of letters
         setSampleLetter(newSampleText);
         setCursorPosAndSize();
@@ -144,7 +155,7 @@ public class Cursor extends Node {
         return sampleLetter;
     }
 
-    public void setSampleLetter(Text sampleLetter) {
+    public void setSampleLetter(MyText sampleLetter) {
         this.sampleLetter = sampleLetter;
     }
 

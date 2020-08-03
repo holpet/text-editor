@@ -38,6 +38,9 @@ public class TextEditor extends Application {
         stage.setMinHeight(300);
         stage.show();
 
+        /** Read text file **/
+        controller.readTextFile();
+
     }
 
 
