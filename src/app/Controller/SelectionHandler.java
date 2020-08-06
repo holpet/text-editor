@@ -1,4 +1,5 @@
 package app.Controller;
+import app.Model.Clipboard;
 import app.Model.MyText;
 import app.Model.Node;
 import app.Model.SelectableNode;
@@ -42,6 +43,7 @@ public class SelectionHandler {
         }
         catch (Exception e) {
             target_myText = null;
+            System.out.println(e);
         }
 
         // If user clicked on a letter:
@@ -74,54 +76,20 @@ public class SelectionHandler {
                 positioner.setCursorIsAtStart(false);
             }
             positioner.updatePosition();
+            System.out.println("CurrentNode: " + positioner.getCurrentNode().getData().toString());
 
+            /**
             if(group.getChildren().contains(target_myText)) {
                 if(!clipboard.getSelectedItems().contains(target_myText))
                     clipboard.unselectAll();
                 clipboard.select(target_myText, true);
-            }
+            }**/
         }
         // If user didn't click on a letter
         else {
             System.out.println("Target equals parent.");
-            clipboard.unselectAll();
+            //clipboard.unselectAll();
         }
     }
 
-    /**
-     * This class is based on jfxtras-labs
-     *  <a href="https://github.com/JFXtras/jfxtras-labs/blob/8.0/src/main/java/jfxtras/labs/scene/control/window/Clipboard.java">Clipboard</a>
-     *  and
-     *  <a href="https://github.com/JFXtras/jfxtras-labs/blob/8.0/src/main/java/jfxtras/labs/util/WindowUtil.java">WindowUtil</a>
-     */
-    private class Clipboard {
-        private ObservableList<SelectableNode> selectedItems = FXCollections.observableArrayList();
-
-        public ObservableList<SelectableNode> getSelectedItems() {
-            return selectedItems;
-        }
-
-        public boolean select(SelectableNode n, boolean selected) {
-            if(n.requestSelection(selected)) {
-                if (selected) {
-                    selectedItems.add(n);
-                } else {
-                    selectedItems.remove(n);
-                }
-                n.notifySelection(selected);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        public void unselectAll() {
-            List<SelectableNode> unselectList = new ArrayList<>();
-            unselectList.addAll(selectedItems);
-
-            for (SelectableNode sN : unselectList) {
-                select(sN, false);
-            }
-        }
-    }
 }

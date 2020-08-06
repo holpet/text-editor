@@ -4,22 +4,40 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MenuHandler {
 
     private Desktop desktop;
+    public KeyEventHandler keyEventHandler;
 
-    public MenuHandler() {
+    public MenuHandler(KeyEventHandler keyEventHandler) {
+        this.keyEventHandler = keyEventHandler;
         this.desktop = Desktop.getDesktop();
     }
 
-    // Additional text editor functionality
+    /** READ FROM FILE **/
+
+    public void readTextFromFile(String filename) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF8"));
+            String line;
+            String fontName = keyEventHandler.cursor.getSampleLetter().getFont().getName();
+            int fontSize = (int)keyEventHandler.cursor.getSampleLetter().getFont().getSize();
+            while ((line = br.readLine()) != null) {
+                for (int i = 0; i < line.length(); i++) {
+                    keyEventHandler.textRenderer.createLetter( ( "" + line.charAt(i) ), fontName, fontSize );
+                }
+            }
+            br.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /** Open file of choice **/
     public void openSetFile(String filename) {

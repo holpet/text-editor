@@ -75,7 +75,8 @@ public class Cursor extends Node {
 
             try {
                 Thread.sleep(500);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 e.printStackTrace();
                 System.out.println("Cursor thread couldn't sleep.");
             }
@@ -151,7 +152,7 @@ public class Cursor extends Node {
         this.curHeight = curHeight;
     }
 
-    public Text getSampleLetter() {
+    public MyText getSampleLetter() {
         return sampleLetter;
     }
 

@@ -4,10 +4,8 @@ import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.jnativehook.mouse.NativeMouseEvent;
-import org.jnativehook.mouse.NativeMouseInputListener;
 
-public class MouseEventHandler implements EventHandler<MouseEvent>, NativeMouseInputListener {
+public class MouseEventHandler implements EventHandler<MouseEvent> {
     public Scene scene;
     public Stage stage;
     public KeyEventHandler keyEventHandler;
@@ -31,32 +29,6 @@ public class MouseEventHandler implements EventHandler<MouseEvent>, NativeMouseI
             //keyEventHandler.positioner.updateCursor();
 
         }
-
-    }
-
-    @Override
-    public void nativeMouseClicked(NativeMouseEvent nativeMouseEvent) {
-
-    }
-
-    @Override
-    public void nativeMousePressed(NativeMouseEvent nativeMouseEvent) {
-
-    }
-
-    @Override
-    public void nativeMouseReleased(NativeMouseEvent nativeMouseEvent) {
-        // Always renders text (in case window has been resized and text has to be adjusted to the new size)
-        //keyEventHandler.handleText();
-    }
-
-    @Override
-    public void nativeMouseMoved(NativeMouseEvent nativeMouseEvent) {
-
-    }
-
-    @Override
-    public void nativeMouseDragged(NativeMouseEvent nativeMouseEvent) {
 
     }
 }

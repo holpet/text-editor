@@ -1,6 +1,5 @@
 package app.Controller;
 
-import app.Model.Cursor;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollPane;
@@ -13,14 +12,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import org.jnativehook.GlobalScreen;
-import org.jnativehook.NativeHookException;
 
 
 public class MainController implements Initializable {
@@ -41,7 +35,6 @@ public class MainController implements Initializable {
 
     public MainController() {
         // To access additional methods in the model class
-        this.menu = new MenuHandler();
     }
 
 
@@ -49,12 +42,6 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Initialize is loaded last (access to loaded fxml), whereas constructor first (no fxml)
-        // Clear previous logging configurations.
-        LogManager.getLogManager().reset();
-        // Get the logger for "org.jnativehook" and set the level to off.
-        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-        logger.setLevel(Level.OFF);
     }
 
     public void setAll(Stage stage, Scene scene) {
@@ -67,35 +54,27 @@ public class MainController implements Initializable {
         Group group = new Group();
 
         /** Handle Key Events **/
-        this.keyEventHandler = new KeyEventHandler(scene, group);
+        this.keyEventHandler = new KeyEventHandler(stage, scene, group, textWindow);
         scene.setOnKeyPressed(keyEventHandler);
         scene.setOnKeyTyped(keyEventHandler);
 
+        /** MENU **/
+        this.menu = new MenuHandler(keyEventHandler);
+
         /** Handle Mouse Events **/
-        try {
-            GlobalScreen.registerNativeHook();
-        }
-        catch(NativeHookException e) {
-            System.out.println("Native Mouse Hook couldn't be registered.");
-            System.out.println(e.getMessage());
-        }
         MouseEventHandler mouseEventHandler = new MouseEventHandler(scene, stage, keyEventHandler);
         scene.setOnMousePressed(mouseEventHandler);
         scene.setOnMouseClicked(mouseEventHandler);
         scene.setOnMouseDragged(mouseEventHandler);
         scene.setOnMouseReleased(mouseEventHandler);
-        GlobalScreen.addNativeMouseListener(mouseEventHandler);
-        GlobalScreen.addNativeMouseMotionListener(mouseEventHandler);
 
         SelectionHandler selectionHandler = new SelectionHandler(group, keyEventHandler);
         textWindow.addEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
 
 
-        /** Handle Window Resize **/
-        /**
-        ResizeListener resizeListener = new ResizeListener(scene);
-        resizeListener.updateChanged(keyEventHandler);
-         **/
+        /** Handle Window Resizing **/
+        ResizeListener resizeListener = new ResizeListener(stage, scene, keyEventHandler, textWindow);
+        resizeListener.handleResizing();
 
         /** Get screen properties **/
         // e.g. Rectangle2D [minX = 0.0, minY=0.0, maxX=1920.0, maxY=1080.0, width=1920.0, height=1080.0]
@@ -106,6 +85,8 @@ public class MainController implements Initializable {
         /** Add group node to be displayed **/
         //rootFXML.getChildren().add(group);
         textWindow.setContent(group);
+
+        //resizeListener.handleScrollView();
     }
 
     public void readTextFile() {
@@ -116,7 +97,8 @@ public class MainController implements Initializable {
     /** ---------- CLASS METHODS - PRIVATE ---------- **/
     @FXML
     private void onOpen() {
-        menu.openChosenFile(stage);
+        menu.readTextFromFile("./txt/text_lorem_ipsum.txt");
+        keyEventHandler.handleText();
     }
 
     @FXML

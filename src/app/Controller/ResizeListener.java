@@ -1,97 +1,56 @@
 package app.Controller;
 
+import app.Model.Node;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
+import javafx.scene.control.ScrollPane;
 import javafx.scene.robot.Robot;
 import java.lang.Number;
-import java.util.Timer;
-import java.util.TimerTask;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Stage;
 
 
 public class ResizeListener {
+    public Stage stage;
     public Scene scene;
-    public int currentWidth;
-    public int currentHeight;
-    public Boolean robot;
+    public ScrollPane textWindow;
+    public KeyEventHandler keyEventHandler;
 
-
-    public ResizeListener(Scene scene) {
+    public ResizeListener(Stage stage, Scene scene, KeyEventHandler keyEventHandler, ScrollPane textWindow) {
+        this.stage = stage;
         this.scene = scene;
-        this.robot = false;
+        this.textWindow = textWindow;
+        this.keyEventHandler = keyEventHandler;
     }
 
-
-    public void updateChanged(KeyEventHandler keyEventHandler) {
-        getSceneWidth(keyEventHandler);
-        getSceneHeight(keyEventHandler);
-        robotKey();
+    public void handleResizing() {
+        ChangeListener<Number> changeListener = new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number oldVal, Number newVal) {
+                Platform.runLater(() -> {
+                    keyEventHandler.handleText();
+                    keyEventHandler.positioner.updatePosition();
+                });
+            }
+        };
+        scene.widthProperty().addListener(changeListener);
+        scene.heightProperty().addListener(changeListener);
     }
+
 
     public void robotKey() {
-        // Trigger a key event to handle text input based on new window size
+        // Test function for keyInput
         try {
             Robot robot = new Robot();
             robot.keyPress(KeyCode.F7);
-            //robot.keyType(KeyCode.SPACE);
-            //robot.keyType(KeyCode.BACK_SPACE);
             //System.out.println("Robot key pressed.");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void getSceneWidth(KeyEventHandler keyEventHandler) {
-        scene.widthProperty().addListener(new ChangeListener<Number>() {
-            final Timer timer = new Timer();
-            TimerTask task = null;
-            final long delayTime = 300;
-
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, final Number newSceneWidth) {
-
-                if (task != null) {
-                    //System.out.println(task + "is cancelled.");
-                    task.cancel();
-                }
-                task = new TimerTask() {
-                    @Override
-                    public void run() {
-                        currentWidth = newSceneWidth.intValue();
-                        System.out.println("Width: " + currentWidth);
-                    }
-                };
-                timer.schedule(task, delayTime);
-            }
-        });
-    }
-
-    private void getSceneHeight(KeyEventHandler keyEventHandler) {
-        scene.heightProperty().addListener(new ChangeListener<Number>() {
-            final Timer timer = new Timer();
-            TimerTask task = null;
-            final long delayTime = 300;
-
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, final Number newSceneHeight) {
-                if (task != null) {
-                    //System.out.println(task + "is cancelled.");
-                    task.cancel();
-                }
-
-                task = new TimerTask() {
-                    @Override
-                    public void run() {
-                        currentHeight = newSceneHeight.intValue();
-                        System.out.println("Height: " + currentHeight);
-                    }
-                };
-                timer.schedule(task, delayTime);
-            }
-        });
-    }
 
 }

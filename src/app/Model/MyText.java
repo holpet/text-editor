@@ -19,11 +19,11 @@ public class MyText extends Text implements SelectableNode {
     public void notifySelection(boolean select) {
         if (select) {
             this.setFill(Color.RED);
-            System.out.println("Letter is selected - RED.");
+            //System.out.println("Letter is selected - RED.");
         }
         else {
             this.setFill(Color.BLACK);
-            System.out.println("Letter is not selected - BLACK.");
+            //System.out.println("Letter is not selected - BLACK.");
         }
     }
 

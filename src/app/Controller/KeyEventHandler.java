@@ -1,14 +1,17 @@
 package app.Controller;
 
 import app.Model.*;
+import app.Model.Cursor;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
+import javafx.scene.control.ScrollPane;
+import javafx.stage.Stage;
 
-import java.io.*;
+import java.awt.*;
 import java.util.HashMap;
 
 
@@ -21,15 +24,19 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
     public String fontName;
 
     /** Other variables **/
+    public Stage stage;
     public Scene scene;
     public Group group;
     public Positioner positioner;
     public TextRenderer textRenderer;
     public Cursor cursor;
+    public ScrollPane textWindow;
 
-    public KeyEventHandler(Scene scene, Group group) {
+    public KeyEventHandler(Stage stage, Scene scene, Group group, ScrollPane textWindow) {
+        this.stage = stage;
         this.scene = scene;
         this.group = group;
+        this.textWindow = textWindow;
         this.hashMap = new HashMap<>();
         this.linkedText = new LinkedList(hashMap);
 
@@ -37,7 +44,8 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         group.getChildren().add(cursor.getStyleableNode());
 
         this.positioner = new Positioner(cursor, linkedText);
-        this.textRenderer = new TextRenderer(scene, group, linkedText, positioner, cursor);
+        positioner.notifyCurrentNode();
+        this.textRenderer = new TextRenderer(stage, scene, group, linkedText, positioner, cursor, textWindow);
 
         this.fontSize = 12;
         this.fontName = "Verdana";
@@ -46,40 +54,8 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         //readTextFromFile("./txt/text_lorem_ipsum.txt");
     }
 
-    private void readTextFromFile(String filename) {
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF8"));
-            String line;
-            while ((line = br.readLine()) != null) {
-                for (int i = 0; i < line.length(); i++) {
-                    createLetter( ( "" + line.charAt(i) ) );
-                }
-            }
-            br.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void handleText() {
         textRenderer.renderText();
-    }
-
-    public void createLetter(String letter) {
-        MyText text = new MyText();
-        text.setText(letter);
-        text.setFont(Font.font(fontName, fontSize));
-        // Insert node into linkedList, update position and save it in a hashMap
-        linkedText.insertAt(text, positioner);
-    }
-
-    public void deleteLetter() {
-        Node oldCurrentNode = positioner.getCurrentNode();
-        if (oldCurrentNode != null) {
-            linkedText.deleteAt(oldCurrentNode, positioner);
-            group.getChildren().remove(oldCurrentNode.getData());
-        }
     }
 
     @Override
@@ -88,35 +64,50 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         /** ALPHABET KEYS **/
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED) {
             String characterTyped = keyEvent.getCharacter();
-            if (characterTyped.length() > 0 && characterTyped.charAt(0) != 8) {
-                // Ignore control keys and backspace (non-zero length)
-                createLetter(characterTyped);
+            // Only include alphanumeric and special characters
+            if (characterTyped.length() > 0 && characterTyped.matches("[\\w\\p{P}\\p{S}\\p{Space}]")) {
+                textRenderer.createLetter(characterTyped, fontName, fontSize);
+                handleText();
             }
 
         /** ARROW, CTRL, DELETE KEYS ETC. **/
         } else if (keyEvent.getEventType() == KeyEvent.KEY_PRESSED) {
-            // for arrow keys
             KeyCode code = keyEvent.getCode();
 
             if (code == KeyCode.UP) {
-                fontSize += 5;
-                //displayText.setFont(Font.font(fontName, fontSize));
+                textRenderer.moveByLetter("UP");
+                handleText();
+                //textRenderer.handleScrollView("UP");
             }
             if (code == KeyCode.DOWN) {
-                fontSize = Math.max(0, fontSize - 5);
-                //displayText.setFont(Font.font(fontName, fontSize));
+                textRenderer.moveByLetter("DOWN");
+                handleText();
+                //textRenderer.handleScrollView("DOWN");
+            }
+
+            if (code == KeyCode.LEFT) {
+                textRenderer.moveByLetter("LEFT");
+                handleText();
+            }
+
+            if (code == KeyCode.RIGHT) {
+                textRenderer.moveByLetter("RIGHT");
+                handleText();
             }
 
             if (code == KeyCode.BACK_SPACE) {
-                deleteLetter();
+                textRenderer.deleteLetter("BACK_SPACE");
+                handleText();
+            }
+
+            if (code == KeyCode.DELETE) {
+                textRenderer.deleteLetter("DELETE");
+                handleText();
             }
         }
         // RENDER NEW TEXT
-        handleText();
         keyEvent.consume();
     }
-
-
 
 
 }
