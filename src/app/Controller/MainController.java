@@ -3,6 +3,7 @@ package app.Controller;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
@@ -57,6 +58,7 @@ public class MainController implements Initializable {
         this.keyEventHandler = new KeyEventHandler(stage, scene, group, textWindow);
         scene.setOnKeyPressed(keyEventHandler);
         scene.setOnKeyTyped(keyEventHandler);
+        scene.setOnKeyReleased(keyEventHandler);
 
         /** MENU **/
         this.menu = new MenuHandler(keyEventHandler);
@@ -70,6 +72,9 @@ public class MainController implements Initializable {
 
         SelectionHandler selectionHandler = new SelectionHandler(group, keyEventHandler);
         textWindow.addEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
+        textWindow.addEventHandler(MouseDragEvent.MOUSE_DRAG_ENTERED_TARGET, selectionHandler.getMouseDraggedEventHandler());
+        textWindow.addEventHandler(MouseDragEvent.MOUSE_DRAG_EXITED_TARGET, selectionHandler.getMouseDraggedEventHandler());
+        textWindow.addEventHandler(MouseDragEvent.MOUSE_DRAG_ENTERED, selectionHandler.getMouseDraggedEventHandler());
 
 
         /** Handle Window Resizing **/

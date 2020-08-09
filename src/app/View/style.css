@@ -1,7 +1,7 @@
-#pane {
-    -fx-background-color: grey ;
+#scrollpane {
+    -fx-background-color: transparent ;
 }
 
-#innerPane {
-    -fx-background-color: white ;
+#scrollpane > .viewport {
+   -fx-background-color: transparent;
 }

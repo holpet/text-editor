@@ -1,7 +1,6 @@
 package app.Model;
 
 import app.Controller.Positioner;
-import javafx.scene.text.Text;
 
 import java.util.HashMap;
 
@@ -33,7 +32,7 @@ public class LinkedList {
             sentinelTail.setPrev(node);
             node.setNext(getSentinelTail());
             node.setPrev(getSentinelHead());
-            //positioner.setCursorIsAtStart(false);
+            positioner.setCursorIsAtStart(false);
         }
         else {
             Node currentNode = positioner.getCurrentNode();
@@ -81,8 +80,14 @@ public class LinkedList {
             }
             else {
                 // Delete first node and set cursor at beginning
-                sentinelHead.setNext(node.getNext());
-                node.getNext().setPrev(getSentinelHead());
+                if (isAtEnd(node.getNext())) {
+                    sentinelHead.setNext(getSentinelTail());
+                    sentinelTail.setPrev(getSentinelHead());
+                }
+                else {
+                    sentinelHead.setNext(node.getNext());
+                    node.getNext().setPrev(getSentinelHead());
+                }
                 positioner.setCursorIsAtStart(true);
                 positioner.updatePosition();
                 positioner.setCurrentNode(getFirst());
@@ -182,13 +187,14 @@ public class LinkedList {
 
 
     public void printAll() {
-        Node temp = getFirst();
+        Node tmp = getFirst();
+        System.out.println("New Print...");
         int ctn = 1;
         if (!isEmpty()) {
-            while (!isAtEnd(temp)) {
-                System.out.println("PRINTING #" + ctn + ": " + temp.getData());
+            while (!isAtEnd(tmp)) {
+                System.out.println("PRINTING #" + ctn + ": " + tmp.getData());
                 ctn++;
-                temp = temp.getNext();
+                tmp = tmp.getNext();
             }
         }
         else {

@@ -28,7 +28,7 @@ public class MenuHandler {
             int fontSize = (int)keyEventHandler.cursor.getSampleLetter().getFont().getSize();
             while ((line = br.readLine()) != null) {
                 for (int i = 0; i < line.length(); i++) {
-                    keyEventHandler.textRenderer.createLetter( ( "" + line.charAt(i) ), fontName, fontSize );
+                    keyEventHandler.textRenderer.textManipulator.createLetter( ( "" + line.charAt(i) ), fontName, fontSize );
                 }
             }
             br.close();

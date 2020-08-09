@@ -28,6 +28,10 @@ public class Clipboard {
         }
     }
 
+    public void unselect(SelectableNode node) {
+        select(node, false);
+    }
+
     public void unselectAll() {
         List<SelectableNode> unselectList = new ArrayList<>();
         unselectList.addAll(selectedItems);

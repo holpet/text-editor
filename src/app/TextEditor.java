@@ -1,7 +1,6 @@
 package app;
 
 import app.Controller.MainController;
-import app.Controller.MenuHandler;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -16,7 +15,7 @@ public class TextEditor extends Application {
 
     @Override
     public void start(Stage stage) throws IOException, NativeHookException {
-        stage.setTitle("Single Letter Display");
+        stage.setTitle("Simple Text Editor");
 
         /** Load View and Controller **/
         FXMLLoader loader = new FXMLLoader();
