@@ -33,7 +33,7 @@
     </MenuBar>
 </top>
    <center>
-      <ScrollPane id="scrollpane" fx:id="textWindow" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="500.0" prefWidth="500.0" stylesheets="@style.css" vbarPolicy="ALWAYS" BorderPane.alignment="CENTER">
+      <ScrollPane id="scrollpane" fx:id="textWindow" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" pannable="true" prefHeight="500.0" prefWidth="500.0" stylesheets="@style.css" vbarPolicy="ALWAYS">
          <BorderPane.margin>
             <Insets />
          </BorderPane.margin>
@@ -41,7 +41,7 @@
             <Insets />
          </opaqueInsets>
          <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            <Insets bottom="20.0" left="20.0" right="0.0" top="20.0" />
          </padding>
       </ScrollPane>
    </center>

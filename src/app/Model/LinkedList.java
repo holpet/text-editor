@@ -1,18 +1,22 @@
 package app.Model;
 
+import app.Controller.KeyEventHandler;
 import app.Controller.Positioner;
+import javafx.application.Platform;
+import javafx.scene.input.KeyEvent;
+import javafx.util.Pair;
 
 import java.util.HashMap;
 
 public class LinkedList {
 
-    //private Node head;
     private final Node sentinelHead;
     private final Node sentinelTail;
     private double size;
     public HashMap<MyText, Node> hashMap;
+    public HashMap<Integer, Node> hashMapIdx;
 
-    public LinkedList(HashMap<MyText, Node> hashMap) {
+    public LinkedList(HashMap<MyText, Node> hashMap, HashMap<Integer, Node> hashMapIdx) {
         MyText head = new MyText();
         head.setText("HEAD");
         MyText tail = new MyText();
@@ -23,6 +27,7 @@ public class LinkedList {
         sentinelTail.setPrev(sentinelHead);
         this.size = 0;
         this.hashMap = hashMap;
+        this.hashMapIdx = hashMapIdx;
     }
 
     public void insertAt(MyText data, Positioner positioner) {
@@ -40,11 +45,12 @@ public class LinkedList {
                 return;
             }
             // Insert new data at current pos
-            if (positioner.getCursorIsAtStart()) {
+            if (currentNode.getData().getX() == 0 && positioner.getCursorIsAtStart()) {
+                Node oldCurPrev = currentNode.getPrev();
                 currentNode.setPrev(node);
                 node.setNext(currentNode);
-                node.setPrev(getSentinelHead());
-                sentinelHead.setNext(node);
+                node.setPrev(oldCurPrev);
+                oldCurPrev.setNext(node);
                 positioner.setCursorIsAtStart(false);
             }
             else {
@@ -52,16 +58,9 @@ public class LinkedList {
                 currentNode.setNext(node);
                 node.setPrev(currentNode);
                 node.setNext(oldCurNext);
-                if (isAtEnd(oldCurNext)) {
-                    sentinelTail.setPrev(node);
-                }
-                else {
-                    oldCurNext.setPrev(node);
-                }
+                oldCurNext.setPrev(node);
             }
         }
-        //System.out.println("Head: " + sentinelHead.getNext().getData());
-        //System.out.println("Tail: " + sentinelTail.getPrev().getData());
         positioner.setCurrentNode(node);
         size++;
         hashMap.put(data, node);
@@ -185,15 +184,24 @@ public class LinkedList {
         return node;
     }
 
+    public void updateNodeIndex() {
+        Node tmp = getFirst();
+        int ctn = 0;
+        if (!isEmpty()) {
+            while (!isAtEnd(tmp)) {
+                tmp.setIndex(ctn);
+                ctn++;
+                tmp = tmp.getNext();
+            }
+        }
+    }
 
     public void printAll() {
         Node tmp = getFirst();
         System.out.println("New Print...");
-        int ctn = 1;
         if (!isEmpty()) {
             while (!isAtEnd(tmp)) {
-                System.out.println("PRINTING #" + ctn + ": " + tmp.getData());
-                ctn++;
+                System.out.println("PRINTING #" + tmp.getIndex() + ": " + tmp.getData());
                 tmp = tmp.getNext();
             }
         }

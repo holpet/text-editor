@@ -1,9 +1,14 @@
 package app.Controller;
 
 import app.Model.*;
+import javafx.application.Platform;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.text.TextBoundsType;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -19,11 +24,12 @@ public class TextRenderer {
     public Cursor cursor;
     public ScrollPane textWindow;
     public TextManipulator textManipulator;
-    private int lineCounter;
     private final ArrayList<Node> dividers;
+    private IndexUpdater indexUpdater;
+    public HashMap<Integer, Node> hashMapIdx;
 
     public TextRenderer(Stage stage, Scene scene, Group group, LinkedList linkedText, Positioner positioner,
-                        Cursor cursor, ScrollPane textWindow, HashMap<MyText, Node> hashMap) {
+                        Cursor cursor, ScrollPane textWindow, HashMap<MyText, Node> hashMap, HashMap<Integer, Node> hashMapIdx) {
         this.stage = stage;
         this.scene = scene;
         this.group = group;
@@ -31,9 +37,10 @@ public class TextRenderer {
         this.positioner = positioner;
         this.cursor = cursor;
         this.textWindow = textWindow;
-        this.textManipulator = new TextManipulator(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap);
-        this.lineCounter = 1;
+        this.hashMapIdx = hashMapIdx;
         this.dividers = new ArrayList<>();
+        this.textManipulator = new TextManipulator(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap, hashMapIdx);
+        this.indexUpdater = new IndexUpdater();
     }
 
     public void renderText() {
@@ -43,12 +50,15 @@ public class TextRenderer {
         if (linkedText.isEmpty()) {
             return;
         }
-        lineCounter = 1;
+        textManipulator.setLineCounter(0);
+        hashMapIdx.clear();
+        hashMapIdx.put(textManipulator.getLineCounter(), tmp);
 
         /** Start rendering text from the first letter **/
         // Initial variables
         int posX = 0;
         int posY = 0;
+        double letterHeight = cursor.getSampleLetter().getLayoutBounds().getHeight();
 
         // Delete all dividers from linkedList and clear it for start
         for (Node node : dividers) {
@@ -62,20 +72,27 @@ public class TextRenderer {
 
         // Go through linkedList and add all the letters
         while (!linkedText.isAtEnd(tmp)) {
+
             // figure out letter size and position of a letter
             double letterWidth = tmp.getData().getLayoutBounds().getWidth();
-            double letterHeight = tmp.getData().getLayoutBounds().getHeight();
+            //double letterHeight = tmp.getData().getLayoutBounds().getHeight();
+
+            tmp.getData().setX(posX);
+            tmp.getData().setY(posY);
+            tmp.getData().setTextOrigin(VPos.TOP);
+            //tmp.toFront();
+
             double nextLetterWidth = 0;
             if (!linkedText.isAtEnd(tmp.getNext())) {
                 nextLetterWidth = tmp.getNext().getData().getLayoutBounds().getWidth();
             }
 
-            tmp.getData().setX(posX);
-            tmp.getData().setY(posY);
-            tmp.toFront();
-
             if (!group.getChildren().contains(tmp.getData())) {
-                textManipulator.addToGroup(tmp);
+                if (!tmp.getData().getText().equals("ENTER")) textManipulator.addToGroup(tmp);
+                else {
+                    posX = 0;
+                }
+                //textManipulator.addToGroup(tmp);
                 // Set cursor position when writing
                 positioner.updatePosition();
             }
@@ -83,27 +100,30 @@ public class TextRenderer {
                 tmp = tmp.getNext();
             }
             else {
-                //linkedText.printAll();
-                //handleScrollView();
+                indexUpdater.startTheService();
+                linkedText.printAll();
+                positioner.updatePosition();
                 return;
             }
             NodeAndCoords nodeAndCoords = handleLines(tmp, nextLetterWidth, letterWidth, letterHeight, posX, posY);
             posX = nodeAndCoords.getCoordX();
             posY = nodeAndCoords.getCoordY();
             tmp = nodeAndCoords.getNode();
+            positioner.updatePosition();
         }
     }
 
-    public Boolean checkLineEnd(int newCoordX, double nextLetterWidth) {
+    private Boolean checkLineEnd(int newCoordX, double nextLetterWidth) {
         //int leftSpace = 52; // cca
+        int padding = 20;
         double leftSpace = scene.getWidth() - textWindow.getViewportBounds().getWidth();
-        if ((newCoordX + nextLetterWidth) >= (scene.getWidth() - leftSpace)) {
+        if ((newCoordX + nextLetterWidth) >= (scene.getWidth() - leftSpace - padding)) {
             return true;
         }
         return false;
     }
 
-    public NodeAndCoords handleLines(Node node, double nextLetterWidth, double letterWidth, double letterHeight, int initCoordX, int initCoordY) {
+    private NodeAndCoords handleLines(Node node, double nextLetterWidth, double letterWidth, double letterHeight, int initCoordX, int initCoordY) {
         int newCoordX = 0;
         int newCoordY = 0;
         NodeAndCoords nodeAndCoords = new NodeAndCoords(newCoordX, newCoordY, node);
@@ -131,7 +151,8 @@ public class TextRenderer {
                         nodeAndCoords.setCoordX(0);
                         nodeAndCoords.setCoordY((initCoordY + (int)letterHeight));
                         // Add line to the counter
-                        lineCounter++;
+                        textManipulator.setLineCounter((textManipulator.getLineCounter()+1));
+                        hashMapIdx.put(textManipulator.getLineCounter(), node);
                         return nodeAndCoords;
                     }
                     else {
@@ -151,7 +172,9 @@ public class TextRenderer {
                 div.getData().setX(initCoordX);
                 div.getData().setY(initCoordY);
                 textManipulator.addToGroup(div);
-                lineCounter++;
+                // Add line to the counter
+                textManipulator.setLineCounter((textManipulator.getLineCounter()+1));
+                hashMapIdx.put(textManipulator.getLineCounter(), node);
 
                 // Add node in ArrayList "dividers"
                 dividers.add(div);
@@ -165,6 +188,12 @@ public class TextRenderer {
         }
         // If next letter fits on the line:
         else {
+            // If next letter is empty "" (ENTER KEY)
+            if (node.getData().getText().equals("ENTER")) {
+                nodeAndCoords.setCoordX(0);
+                nodeAndCoords.setCoordY((initCoordY + (int)letterHeight));
+                return nodeAndCoords;
+            }
             // Add next letter on the line
             nodeAndCoords.setCoordX(newCoordX);
             nodeAndCoords.setCoordY(initCoordY);
@@ -172,12 +201,40 @@ public class TextRenderer {
         }
     }
 
+    public class IndexUpdater extends Service<Boolean> {
 
-    public int getLineCounter() {
-        return lineCounter;
+        public IndexUpdater () {
+            setOnSucceeded(s -> {
+                //System.out.println("Index update succeeded...");
+            });
+            setOnFailed(fail -> {
+                //System.out.println("Index update failed...");
+            });
+            setOnCancelled(cancelled->{
+                //System.out.println("Index update cancelled...");
+            });
+        }
+
+        public void startTheService(){
+            if(!isRunning()){
+                reset();
+                start();
+            }
+        }
+
+        @Override
+        protected Task<Boolean> createTask() {
+            return new Task<Boolean>() {
+                @Override
+                protected Boolean call() throws Exception {
+                    linkedText.updateNodeIndex();
+                    if (isCancelled()) {
+                        return false;
+                    }
+                    return true;
+                }
+            };
+        };
     }
 
-    public void setLineCounter(int lineCounter) {
-        this.lineCounter = lineCounter;
-    }
 }

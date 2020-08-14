@@ -1,26 +1,22 @@
 package app.Model;
 
-import app.Controller.Positioner;
 import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-
-import java.util.HashMap;
 
 public class Cursor extends Node {
 
-    private Rectangle cursor;
+    private final Rectangle cursor;
     private double curX;
     private double curY;
     private double curWidth;
     private double curHeight;
     private Boolean isRunning;
     private MyText sampleLetter;
-    private Thread cursorThread;
+    private final Thread cursorThread;
 
     public Cursor(Group group) {
         this.curX = 0;
@@ -39,13 +35,13 @@ public class Cursor extends Node {
 
         this.cursor = new Rectangle(curX, curY, curWidth, curHeight);
         cursor.setFill(Color.BLACK);
-        cursor.toFront();
 
         this.isRunning = true;
         cursorThread = new Thread(this::handleCursorThread);
         cursorThread.start();
 
         group.getChildren().add(cursor);
+        cursor.toFront();
     }
 
     @Override

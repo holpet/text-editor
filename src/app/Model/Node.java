@@ -4,11 +4,13 @@ public class Node extends javafx.scene.Node {
     private MyText data;
     private Node next;
     private Node prev;
+    private int index;
 
     public Node(MyText data) {
         this.data = data;
         this.next = null;
         this.prev = null;
+        this.index = 0;
     }
 
     @Override
@@ -38,5 +40,13 @@ public class Node extends javafx.scene.Node {
 
     public void setPrev(Node prev) {
         this.prev = prev;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 }

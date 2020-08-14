@@ -35,11 +35,11 @@ public class Positioner {
             double letterHeight = getCurrentNode().getData().getLayoutBounds().getHeight();
             //letter minY = letterHeight+2 (cca 12)
             if (!getCursorIsAtStart()) {
-                cursor.changeCursorPos( (posX+letterWidth), (posY-letterHeight+2) );
+                cursor.changeCursorPos( (posX+letterWidth), (posY) );
             }
             else {
                 posX = 0;
-                cursor.changeCursorPos( (posX), (posY-letterHeight+2) );
+                cursor.changeCursorPos( (posX), (posY) );
             }
             change.setValue(true);
         }

@@ -19,6 +19,7 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
     /** The Text to display on screen **/
     public LinkedList linkedText;
     public HashMap<MyText, Node> hashMap;
+    public HashMap<Integer, Node> hashMapIdx;
     public int fontSize;
     public String fontName;
 
@@ -30,6 +31,7 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
     public TextRenderer textRenderer;
     public Cursor cursor;
     public ScrollPane textWindow;
+    private Boolean shiftStart;
 
     public KeyEventHandler(Stage stage, Scene scene, Group group, ScrollPane textWindow) {
         this.stage = stage;
@@ -37,18 +39,15 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         this.group = group;
         this.textWindow = textWindow;
         this.hashMap = new HashMap<>();
-        this.linkedText = new LinkedList(hashMap);
-
+        this.hashMapIdx = new HashMap<>(); // first node on a line
+        this.linkedText = new LinkedList(hashMap, hashMapIdx);
         this.cursor = new Cursor(group);
-
         this.positioner = new Positioner(cursor, linkedText);
-        this.textRenderer = new TextRenderer(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap);
+        this.textRenderer = new TextRenderer(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap, hashMapIdx);
 
-        this.fontSize = 12;
-        this.fontName = "Verdana";
-
-        // READ FILE
-        //readTextFromFile("./txt/text_lorem_ipsum.txt");
+        this.fontSize = (int)cursor.getSampleLetter().getFont().getSize();
+        this.fontName = cursor.getSampleLetter().getFont().getName();
+        this.shiftStart = false;
     }
 
     public void handleText() {
@@ -62,7 +61,8 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         if (keyEvent.getEventType() == KeyEvent.KEY_TYPED) {
             String characterTyped = keyEvent.getCharacter();
             // Only include alphanumeric and special characters
-            if (characterTyped.length() > 0 && characterTyped.matches("[\\w\\p{P}\\p{S}\\p{Space}]")) {
+            if (characterTyped.length() > 0 && characterTyped.matches("[\\w\\p{P}\\p{S}\\p{Space}]") &&
+                    !characterTyped.matches("[\\r|\\n]")) {
                 textRenderer.textManipulator.createLetter(characterTyped, fontName, fontSize);
                 handleText();
             }
@@ -72,23 +72,29 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             KeyCode code = keyEvent.getCode();
 
             if (code == KeyCode.UP) {
+                handleShift(keyEvent);
                 textRenderer.textManipulator.moveByLetter("UP", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
+                //textRenderer.textManipulator.handleScrollView("UP");
             }
             if (code == KeyCode.DOWN) {
+                handleShift(keyEvent);
                 textRenderer.textManipulator.moveByLetter("DOWN", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
+                //textRenderer.textManipulator.handleScrollView("DOWN");
             }
 
             if (code == KeyCode.LEFT) {
+                handleShift(keyEvent);
                 textRenderer.textManipulator.moveByLetter("LEFT", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
             }
 
             if (code == KeyCode.RIGHT) {
+                handleShift(keyEvent);
                 textRenderer.textManipulator.moveByLetter("RIGHT", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
@@ -108,8 +114,13 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
 
             if (code == KeyCode.SHIFT) {
                 if (textRenderer.textManipulator.pairSelection.isEmpty()) {
-                    addSelection(0);
+                    shiftStart = true;
                 }
+            }
+
+            if (code == KeyCode.ENTER) {
+                //textRenderer.textManipulator.createLetter("ENTER", fontName, fontSize);
+                //handleText();
             }
         }
 
@@ -117,19 +128,31 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             KeyCode code = keyEvent.getCode();
 
             if (code == KeyCode.SHIFT) {
-                addSelection(1);
+                if (!textRenderer.textManipulator.pairSelection.isEmpty()) {
+                    addSelection(1);
+                }
+                shiftStart = false;
             }
 
 
         }
-
         // RENDER NEW TEXT
         keyEvent.consume();
     }
 
     private void addSelection(int num) {
-        //textRenderer.textManipulator.selection.add(num, positioner.getCurrentNode());
+        if (positioner.getCurrentNode() == null || linkedText.isEmpty()) return;
+        //System.out.println("Current node/add selection: " + positioner.getCurrentNode().getData());
         textRenderer.textManipulator.pairSelection.add(num, new Pair<>(positioner.getCurrentNode(), positioner.getCursorIsAtStart()));
+    }
+
+    private void handleShift(KeyEvent keyEvent) {
+        if (keyEvent.isShiftDown()) {
+            if (shiftStart) {
+                addSelection(0);
+                shiftStart = false;
+            }
+        }
     }
 
     private void handleSelection(KeyEvent keyEvent) {

@@ -6,14 +6,15 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
+import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -28,9 +29,11 @@ public class TextManipulator {
     public final ArrayList<Pair<Node, Boolean>> pairSelection;
     public final Clipboard clipboard;
     public HashMap<MyText, Node> hashMap;
+    public HashMap<Integer, Node> hashMapIdx;
+    private int lineCounter;
 
     public TextManipulator(Stage stage, Scene scene, Group group, LinkedList linkedText, Positioner positioner,
-                           Cursor cursor, ScrollPane textWindow, HashMap<MyText, Node> hashMap) {
+                           Cursor cursor, ScrollPane textWindow, HashMap<MyText, Node> hashMap, HashMap<Integer, Node> hashMapIdx) {
         this.stage = stage;
         this.scene = scene;
         this.group = group;
@@ -41,6 +44,8 @@ public class TextManipulator {
         this.pairSelection = new ArrayList<>();
         this.clipboard = new Clipboard();
         this.hashMap = hashMap;
+        this.hashMapIdx = hashMapIdx;
+        this.lineCounter = 0;
     }
 
     /** ************************************************************************ **/
@@ -56,11 +61,15 @@ public class TextManipulator {
         group.getChildren().remove(node.getData().getBackground());
     }
 
+
     /** ************************************************************************ **/
     /** ------------------------ CREATE/DELETE TEXT ------------------------ **/
     public void createLetter(String letter, String fontName, int fontSize) {
         MyText text = createLetter_simplified(letter, fontName, fontSize);
         // Insert node into linkedList, update position and save it in a hashMap
+        if (!pairSelection.isEmpty()) {
+            deleteSelection();
+        }
         linkedText.insertAt(text, positioner);
     }
 
@@ -79,6 +88,7 @@ public class TextManipulator {
         switch (key) {
             case "BACK_SPACE" -> {
                 Node node = linkedText.deleteAt_BACKSPACE(currentNode, positioner);
+                //if (node.getPrev().getData().getText().equals(""))
                 if (node != null) {
                     deleteFromGroup(node);
                 }
@@ -106,13 +116,18 @@ public class TextManipulator {
             linkedText.deleteAt_simplified(node);
             deleteFromGroup(node);
         }
-        System.out.println("After DEL: " + positioner.getCurrentNode().getData());
 
         if (linkedText.isEmpty()) positioner.setCurrentNode(null);
+
         if (direction.equals("UP/LEFT")) {
             if (linkedText.isAtBeginning(end.getPrev())) {
                 positioner.setCurrentNode(linkedText.getFirst());
-                positioner.setCursorIsAtStart(true);
+                if (pairSelection.get(1).getValue()) {
+                    positioner.setCursorIsAtStart(true);
+                }
+                else {
+                    positioner.setCursorIsAtStart(false);
+                }
             }
             else {
                 positioner.setCurrentNode(end);
@@ -122,14 +137,18 @@ public class TextManipulator {
         else { // "DOWN/RIGHT"
             if (linkedText.isAtBeginning(start.getPrev())) {
                 positioner.setCurrentNode(linkedText.getFirst());
-                positioner.setCursorIsAtStart(true);
+                if (pairSelection.get(0).getValue()) {
+                    positioner.setCursorIsAtStart(true);
+                }
+                else {
+                    positioner.setCursorIsAtStart(false);
+                }
             }
             else {
                 positioner.setCurrentNode(start);
                 positioner.setCursorIsAtStart(false);
             }
         }
-        System.out.println("Cur sel NODE: " + positioner.getCurrentNode().getData());
         positioner.updatePosition();
         clipboard.unselectAll();
         pairSelection.clear();
@@ -144,7 +163,7 @@ public class TextManipulator {
         if (currentNode == null) return;
 
         // Initial position before move
-        if (keyEvent.isShiftDown()) {
+        if (keyEvent.isShiftDown() && !pairSelection.isEmpty()) {
             pairSelection.add(1, (new Pair<>(positioner.getCurrentNode(), positioner.getCursorIsAtStart())));
         }
 
@@ -152,8 +171,17 @@ public class TextManipulator {
 
             case "LEFT" -> {
                 if (!linkedText.isAtBeginning(currentNode.getPrev())) {
-                    positioner.setCurrentNode(currentNode.getPrev());
-                    positioner.setCursorIsAtStart(false);
+                    // If letter is at the beginning of a line
+                    if (currentNode.getData().getX() == 0) {
+                        if (positioner.getCursorIsAtStart()) {
+                            positioner.setCurrentNode(currentNode.getPrev());
+                            positioner.setCursorIsAtStart(false);
+                        }
+                        else positioner.setCursorIsAtStart(true);
+                    }
+                    else {
+                        positioner.setCurrentNode(currentNode.getPrev());
+                    }
                 }
                 else {
                     if (!positioner.getCursorIsAtStart()) {
@@ -165,19 +193,39 @@ public class TextManipulator {
 
             case "RIGHT" -> {
                 if (!linkedText.isAtEnd(currentNode.getNext())) {
-                    if (!positioner.getCursorIsAtStart()) {
+                    // If letter is at the beginning of a line
+                    System.out.println("Right: " + currentNode.getData());
+                    if (currentNode.getData().getX() == 0 && positioner.getCursorIsAtStart()) {
+                        positioner.setCursorIsAtStart(false);
+                        return;
+                    }
+                    else {
                         positioner.setCurrentNode(currentNode.getNext());
                     }
+                    // If letter is at the end of a line
+                    if (currentNode.getNext().getData().getY() > currentNode.getData().getY()) {
+                        positioner.setCurrentNode(currentNode.getNext());
+                        positioner.setCursorIsAtStart(true);
+                    }
+                    else {
+                        positioner.setCurrentNode(currentNode.getNext());
+                        positioner.setCursorIsAtStart(false);
+                    }
                 }
-                positioner.setCursorIsAtStart(false);
                 positioner.updatePosition();
             }
 
             case "DOWN" -> {
                 Node newCurrentNode = switchLines("DOWN");
+                //System.out.println("Down: " + currentNode.getData());
                 if (newCurrentNode != null) {
-                    positioner.setCurrentNode(newCurrentNode);
-                    positioner.setCursorIsAtStart(false);
+                    if (positioner.getCursorIsAtStart()) {
+                        positioner.setCurrentNode(newCurrentNode);
+                        positioner.setCursorIsAtStart(true);
+                    }
+                    else {
+                        positioner.setCurrentNode(newCurrentNode);
+                    }
                     positioner.updatePosition();
                 }
             }
@@ -185,64 +233,70 @@ public class TextManipulator {
             case "UP" -> {
                 Node newCurrentNode = switchLines("UP");
                 if (newCurrentNode != null) {
-                    positioner.setCurrentNode(newCurrentNode);
-                    positioner.setCursorIsAtStart(false);
+                    if (positioner.getCursorIsAtStart()) {
+                        positioner.setCurrentNode(newCurrentNode);
+                        positioner.setCursorIsAtStart(true);
+                    }
+                    else {
+                        positioner.setCurrentNode(newCurrentNode);
+                    }
                     positioner.updatePosition();
                 }
             }
         }
     }
 
-    private Node findSwitchedNode(Node node, double centerX, double centerY, double letterHeight, String direction) {
-        double X = node.getData().getX();
-        double Y = node.getData().getY();
-        double letterWidth = node.getData().getLayoutBounds().getWidth();
+    private Boolean checkBoundaries(MyText target, Double x) {
+        Double targetX = target.getX();
+        Double targetWidth = target.getLayoutBounds().getWidth();
+        return (x >= targetX && x <= (targetX + targetWidth));
+    }
 
-        // If linkedList is at the end -> no node found, return null
-        if (linkedText.isAtEnd(node)) {
+    private Node findSwitchedNode(double centerX, double centerY, double letterHeight) {
+        Node result;
+        // Determine what line did the user click on using y coord
+        Integer lineNum = Math.floorDiv((int)centerY, (int)letterHeight);
+        Node lineNode = hashMapIdx.get(lineNum); // first node on a line
+        if (lineNum > getLineCounter() || centerY < 0) {
             return null;
         }
-        // Search for a node in corresponding vertical and horizontal position and return it if found
-        if ((centerY >= Y && centerY <= (Y+letterHeight)) && (centerX >= X && centerX <= (X+letterWidth))) {
-            System.out.println("Switched Node: " + node.getData());
-            return node;
-        }
-        // If you can't find the node
-        else {
-            // Continue searching in the linkedList
-            switch (direction) {
-                case "DOWN" -> {
-                    return findSwitchedNode(node.getNext(), centerX, centerY, letterHeight, "DOWN");
-                }
-                case "UP" -> {
-                    return findSwitchedNode(node.getPrev(), centerX, centerY, letterHeight, "UP");
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + direction);
+        // Traverse through line to find the closest x coord
+        Boolean found = false;
+        while ((int)lineNode.getData().getY() == lineNum*(int)letterHeight) {
+            found = checkBoundaries(lineNode.getData(), centerX);
+            if (found) {
+                result = lineNode;
+                //System.out.println("Closest node found (T=0): " + result);
+                return result;
+            }
+            lineNode = lineNode.getNext();
+            if ( ((int)lineNode.getNext().getData().getY() != lineNum*(int)letterHeight) || linkedText.isAtEnd(lineNode.getNext())) {
+                result = lineNode;
+                //System.out.println("Closest node found (T=0): " + result);
+                return result;
             }
         }
+        return null;
     }
 
     private Node switchLines(String direction) {
         Node currentNode = positioner.getCurrentNode();
         double posX = currentNode.getData().getX();
         double posY = currentNode.getData().getY();
-        double letterWidth = currentNode.getData().getLayoutBounds().getWidth();
         double letterHeight = currentNode.getData().getLayoutBounds().getHeight();
 
         switch (direction) {
 
             case "DOWN" -> {
-                Node tmp = currentNode.getNext();
-                double centerPointX = posX + letterWidth/2;
+                double centerPointX = posX; // + letterWidth/2
                 double centerPointY = posY + letterHeight + letterHeight/2;
-                return findSwitchedNode(tmp, centerPointX, centerPointY, letterHeight, "DOWN");
+                return findSwitchedNode(centerPointX, centerPointY, letterHeight);
             }
 
             case "UP" -> {
-                Node tmp = currentNode.getPrev();
-                double centerPointX = posX + letterWidth/2;
+                double centerPointX = posX; //+ letterWidth/2
                 double centerPointY = posY - letterHeight/2;
-                return findSwitchedNode(tmp, centerPointX, centerPointY, letterHeight, "UP");
+                return findSwitchedNode(centerPointX, centerPointY, letterHeight);
             }
         }
         return null;
@@ -271,28 +325,39 @@ public class TextManipulator {
             String direction = decideDirection();
             clipboard.unselectAll();
 
+            Node start = hashMap.get(pairSelection.get(0).getKey().getData());
+            Node end = hashMap.get(pairSelection.get(1).getKey().getData());
+            double startY = start.getData().getBoundsInParent().getMinY();
+            double endY = end.getData().getBoundsInParent().getMinY();
+
             switch (direction) {
                 case "UP/LEFT" -> {
+                    if (node.getData().getX() == 0 && cursorAtStart) {
+                        node = node.getPrev();
+                    }
                     while (node != pairSelection.get(1).getKey()) {
                         clipboard.select(node.getData(), true);
                         node = node.getPrev();
                     }
-                    if (linkedText.isAtBeginning(node.getPrev()) && positioner.getCursorIsAtStart()) {
-                        System.out.println("UP/LEFT: is at beginning...");
-                        System.out.println(node.getData());
-                        if (!cursorAtStart) clipboard.select(node.getData(), true);
+                    if (node.getData().getX() == 0 && positioner.getCursorIsAtStart()) {
+                        clipboard.select(node.getData(), true);
                     }
                 }
                 case "DOWN/RIGHT" -> {
-                    if (linkedText.isAtBeginning(node.getPrev()) && !positioner.getCursorIsAtStart()) {
-                        System.out.println("DOWN/RIGHT: is at beginning...");
-                        System.out.println(node.getData());
-                        if (cursorAtStart) clipboard.select(node.getData(), true);
+                    // right
+                    if (node.getData().getX() == 0 && cursorAtStart && !positioner.getCursorIsAtStart()) {
+                        clipboard.select(node.getData(), true);
+                    }
+                    // down
+                    if (node.getData().getX() == 0 && cursorAtStart && positioner.getCursorIsAtStart() && (endY > startY)) {
+                        clipboard.select(node.getData(), true);
                     }
                     while (node != pairSelection.get(1).getKey()) {
                         clipboard.select(node.getNext().getData(), true);
                         node = node.getNext();
                     }
+                    if (positioner.getCursorIsAtStart()) clipboard.select(node.getData(), false);
+                    System.out.println(positioner.getCurrentNode().getData());
 
                 }
             }
@@ -302,69 +367,76 @@ public class TextManipulator {
     private String decideDirection() {
         Node start = hashMap.get(pairSelection.get(0).getKey().getData());
         Node end = hashMap.get(pairSelection.get(1).getKey().getData());
+        Boolean cursorAtStart = pairSelection.get(0).getValue();
+        Boolean cursorAtEnd = positioner.getCursorIsAtStart();
         double startX = start.getData().getBoundsInParent().getMinX();
         double startY = start.getData().getBoundsInParent().getMinY();
         double endX = end.getData().getBoundsInParent().getMinX();
         double endY = end.getData().getBoundsInParent().getMinY();
         if ( (endX < startX && endY == startY) || endY < startY ) return "UP/LEFT";
         if ( (endX > startX && endY == startY) || endY > startY ) return "DOWN/RIGHT";
-        if (positioner.getCursorIsAtStart()) return "UP/LEFT";
+        if (!cursorAtStart && cursorAtEnd) return "UP/LEFT";
         else return "DOWN/RIGHT";
     }
 
 
     /** ************************************************************************ **/
     /** ------------------------ SCROLL OPERATIONS ------------------------ **/
-    public void handleScrollView() {
-        // ADD TO renderText() ... had to check for where currentNode is at any moment
-        //double c = textWindow.getContent().getBoundsInLocal().getHeight(); // SCROLLPANE CONTENT
-        double v = textWindow.getViewportBounds().getHeight(); // VIEWPORT
-        double vMinY = textWindow.getViewportBounds().getMinY();
-        double vMaxY = textWindow.getViewportBounds().getMaxY();
-        //System.out.println("Viewport height: " + v + ", V Min: " + vMinY + ", V Max: " + vMaxY);
 
-        Node currentNode = positioner.getCurrentNode();
-        if (currentNode == null) return;
+    public Double getVisibleAmount() {
+        for (javafx.scene.Node node : textWindow.lookupAll(".scroll-bar")) {
+            if (node instanceof ScrollBar) {
+                ScrollBar scrollBar = (ScrollBar) node;
+                if (scrollBar.getOrientation() == Orientation.VERTICAL) {
+                    return scrollBar.getVisibleAmount();
+                }
+            }
+        }
+        return null;
+    }
 
-        ObjectBinding<Bounds> visibleBounds = Bindings.createObjectBinding(() -> {
-            Bounds viewportBounds = textWindow.getViewportBounds();
-            Bounds viewportBoundsInScene = textWindow.localToScene(viewportBounds);
-            return group.sceneToLocal(viewportBoundsInScene);
-        }, textWindow.hvalueProperty(), textWindow.vvalueProperty(), textWindow.viewportBoundsProperty());
+    public void handleScrollView(String direction) {
+        Double visAmount = getVisibleAmount();
+        if (visAmount >= 1) return;
 
-        // keep current node in viewport
-        double letterHeight = positioner.getCurrentNode().getData().getLayoutBounds().getHeight();
-        double h = textWindow.getBoundsInLocal().getHeight(); // SCROLLPANE
-        double h_maxY = positioner.getCurrentNode().getData().getBoundsInParent().getMaxY();
-        double h_size;
+        Double height = textWindow.getContent().getLayoutBounds().getHeight();
+        Integer lineHeight = (int)cursor.getSampleLetter().getLayoutBounds().getHeight();
+        Double lineDeltaY = ((height-height*visAmount) / getLineCounter())/100;
 
+        System.out.println(visAmount);
+        System.out.println("Line Delta: " + (height-height*visAmount) / getLineCounter()/100);
 
-        // Down direction or up direction
-        //if (currentNode.getBoundsInParent().getMaxY() )
-
-        h_size = (h_maxY - letterHeight*2) / h;
-        textWindow.setVvalue(h_size);
+        //double h_size = (h_maxY - letterHeight*2) / h;
+        if (direction.equals("UP")) textWindow.setVvalue(textWindow.getVvalue() - lineDeltaY);
+        else textWindow.setVvalue(textWindow.getVvalue() + lineDeltaY);
 
     }
 
-    private void showVisibleNodes() {
+    public void showVisibleNodes() {
         ObjectBinding<Bounds> visibleBounds = Bindings.createObjectBinding(() -> {
             Bounds viewportBounds = textWindow.getViewportBounds();
             Bounds viewportBoundsInScene = textWindow.localToScene(viewportBounds);
             return group.sceneToLocal(viewportBoundsInScene);
         }, textWindow.hvalueProperty(), textWindow.vvalueProperty(), textWindow.viewportBoundsProperty());
-
 
         FilteredList<javafx.scene.Node> visibleNodes = new FilteredList<>(group.getChildren());
         visibleNodes.predicateProperty().bind(Bindings.createObjectBinding(() ->
                 node -> node.getBoundsInParent().intersects(visibleBounds.get()), visibleBounds));
-
 
         visibleNodes.addListener((ListChangeListener.Change<? extends javafx.scene.Node> c) -> {
             visibleNodes.forEach(System.out::println);
             System.out.println();
         });
     }
+
+    public int getLineCounter() {
+        return lineCounter;
+    }
+
+    public void setLineCounter(int lineCounter) {
+        this.lineCounter = lineCounter;
+    }
+
 
     /** ************************************************************************ **/
     /** ------------------------ CENTER/LEFT/RIGHT FULL TEXT ------------------------ **/

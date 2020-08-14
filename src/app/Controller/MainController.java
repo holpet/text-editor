@@ -1,10 +1,12 @@
 package app.Controller;
 
+import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Cursor;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -64,18 +66,12 @@ public class MainController implements Initializable {
         this.menu = new MenuHandler(keyEventHandler);
 
         /** Handle Mouse Events **/
-        MouseEventHandler mouseEventHandler = new MouseEventHandler(scene, stage, keyEventHandler);
-        scene.setOnMousePressed(mouseEventHandler);
-        scene.setOnMouseClicked(mouseEventHandler);
-        scene.setOnMouseDragged(mouseEventHandler);
-        scene.setOnMouseReleased(mouseEventHandler);
-
-        SelectionHandler selectionHandler = new SelectionHandler(group, keyEventHandler);
-        textWindow.addEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
-        textWindow.addEventHandler(MouseDragEvent.MOUSE_DRAG_ENTERED_TARGET, selectionHandler.getMouseDraggedEventHandler());
-        textWindow.addEventHandler(MouseDragEvent.MOUSE_DRAG_EXITED_TARGET, selectionHandler.getMouseDraggedEventHandler());
-        textWindow.addEventHandler(MouseDragEvent.MOUSE_DRAG_ENTERED, selectionHandler.getMouseDraggedEventHandler());
-
+        MouseEventHandler mouseEventHandler = new MouseEventHandler(group, keyEventHandler);
+        textWindow.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseEventHandler.getMouseMotionEventHandler());
+        textWindow.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseEventHandler.getMouseMotionEventHandler());
+        group.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseEventHandler.getMouseMotionEventHandler());
+        mouseEventHandler.handleScroll();
+        mouseEventHandler.handleCursorSwitch();
 
         /** Handle Window Resizing **/
         ResizeListener resizeListener = new ResizeListener(stage, scene, keyEventHandler, textWindow);
@@ -90,8 +86,6 @@ public class MainController implements Initializable {
         /** Add group node to be displayed **/
         //rootFXML.getChildren().add(group);
         textWindow.setContent(group);
-
-        //resizeListener.handleScrollView();
     }
 
     public void readTextFile() {
