@@ -30,12 +30,14 @@ public class MenuHandler {
             int fontSize = (int)keyEventHandler.cursor.getSampleLetter().getFont().getSize();
 
             // Delete current text in editor
-            Node node = keyEventHandler.linkedText.getFirst();
-            while (!keyEventHandler.linkedText.isAtEnd(node)) {
-                keyEventHandler.textRenderer.textManipulator.deleteFromGroup(node);
-                node = node.getNext();
+            if (!keyEventHandler.linkedText.isEmpty()) {
+                Node node = keyEventHandler.linkedText.getFirst();
+                while (!keyEventHandler.linkedText.isAtEnd(node)) {
+                    keyEventHandler.textRenderer.textManipulator.deleteFromGroup(node);
+                    node = node.getNext();
+                }
+                keyEventHandler.linkedText.clearLL();
             }
-            keyEventHandler.linkedText.clearLL();
 
             // Read text from file
             while ((value = br.read()) != -1) {
