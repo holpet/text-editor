@@ -89,6 +89,11 @@ public class MainController implements Initializable {
         textWindow.setContent(group);
     }
 
+    public void handlePostLoading() {
+        keyEventHandler.handleText();
+        keyEventHandler.textRenderer.textManipulator.setScrollBar();
+    }
+
     public void readTextFile() {
         keyEventHandler.handleText();
     }

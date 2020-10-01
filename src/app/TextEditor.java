@@ -37,10 +37,8 @@ public class TextEditor extends Application {
         stage.setMinHeight(300);
         stage.show();
 
-        /** Helper functions **/
-        controller.readTextFile();
-        controller.getKeyEventHandler().textRenderer.textManipulator.setScrollBar();
-
+        /** Additional **/
+        controller.handlePostLoading();
     }
 
 
