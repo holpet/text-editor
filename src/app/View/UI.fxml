@@ -17,9 +17,6 @@
                 </items>
             </Menu>
             <Menu text="Edit">
-                <items>
-                    <MenuItem onAction="#onDelete" text="Delete" />
-                </items>
             </Menu>
             <Menu text="Help">
                 <items>

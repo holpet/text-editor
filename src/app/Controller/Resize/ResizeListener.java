@@ -1,6 +1,6 @@
-package app.Controller;
+package app.Controller.Resize;
 
-import app.Model.Node;
+import app.Controller.KeyEventHandler;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -40,7 +40,8 @@ public class ResizeListener {
         scene.heightProperty().addListener(changeListener);
     }
 
-
+    // Helper function for testing
+    /*
     public void robotKey() {
         // Test function for keyInput
         try {
@@ -50,7 +51,7 @@ public class ResizeListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
 
 }

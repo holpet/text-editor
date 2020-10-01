@@ -1,4 +1,5 @@
 package app.Controller;
+import app.Controller.Position.Positioner;
 import app.Model.Clipboard;
 import app.Model.MyText;
 import app.Model.Node;
@@ -10,12 +11,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.util.Pair;
 
 public class MouseEventHandler {
@@ -65,9 +63,15 @@ public class MouseEventHandler {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number oldNum, Number newNum) {
                 // count deltaY to adjust coordinates for findTargetText...
+
                 Double height = keyEventHandler.textWindow.getContent().getLayoutBounds().getHeight();
                 Double visAmount = keyEventHandler.textRenderer.textManipulator.getVisibleAmount();
                 Double deltaY = ( (height-height*visAmount) * Math.abs(((Double)newNum-(Double)oldNum)));
+
+                /**
+                System.out.println("content height: " + height);
+                System.out.println("visAmount: " + visAmount);
+                System.out.println("delta: " + deltaY);**/
 
                 if ((Double)oldNum < (Double)newNum) setDeltaY(getDeltaY()+deltaY);
                 else setDeltaY(getDeltaY()-deltaY);
@@ -84,9 +88,14 @@ public class MouseEventHandler {
 
     public MyText findTargetText(MouseEvent event, String type) {
         int padding = 20;
-        if (type.equals("drag")) padding = 0;
+        Double delta = getDeltaY();
+        if (type.equals("drag")) {
+            // drag is listening on group instead of scrollpane
+            padding = 0;
+            delta = 0.0;
+        }
         double x = event.getX() - padding;
-        double y = event.getY() + getDeltaY() - padding;
+        double y = event.getY() + delta - padding;
 
         //double y = event.getY() - padding;
 
@@ -150,8 +159,10 @@ public class MouseEventHandler {
         MyText target = findTargetText(event, "pressed");
         clipboard.unselectAll();
         pairSelection.clear();
+        //System.out.println("target: " + hashMap.get(target).getData());
+        //System.out.println("current: " + positioner.getCurrentNode().getData());
 
-        // If user clicked on a letter (node):
+        // If user clicked on a letter/letter was selected (MyText):
         if (target != null) {
             // Determine which side of the letter user clicked.
             double mousePosX = event.getX()-20; // accounts for padding (20)

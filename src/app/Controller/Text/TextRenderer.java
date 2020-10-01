@@ -1,14 +1,14 @@
-package app.Controller;
+package app.Controller.Text;
 
+import app.Controller.Position.Positioner;
 import app.Model.*;
-import javafx.application.Platform;
+import app.Model.Command.CommandList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.text.TextBoundsType;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -27,9 +27,11 @@ public class TextRenderer {
     private final ArrayList<Node> dividers;
     private IndexUpdater indexUpdater;
     public HashMap<Integer, Node> hashMapIdx;
+    public CommandList commandList;
 
     public TextRenderer(Stage stage, Scene scene, Group group, LinkedList linkedText, Positioner positioner,
-                        Cursor cursor, ScrollPane textWindow, HashMap<MyText, Node> hashMap, HashMap<Integer, Node> hashMapIdx) {
+                        Cursor cursor, ScrollPane textWindow, HashMap<MyText, Node> hashMap, HashMap<Integer, Node> hashMapIdx,
+                        CommandList commandList) {
         this.stage = stage;
         this.scene = scene;
         this.group = group;
@@ -39,8 +41,10 @@ public class TextRenderer {
         this.textWindow = textWindow;
         this.hashMapIdx = hashMapIdx;
         this.dividers = new ArrayList<>();
-        this.textManipulator = new TextManipulator(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap, hashMapIdx);
         this.indexUpdater = new IndexUpdater();
+        this.commandList = commandList;
+
+        this.textManipulator = new TextManipulator(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap, hashMapIdx, commandList);
     }
 
     public void renderText() {
@@ -80,7 +84,6 @@ public class TextRenderer {
             tmp.getData().setX(posX);
             tmp.getData().setY(posY);
             tmp.getData().setTextOrigin(VPos.TOP);
-            //tmp.toFront();
 
             double nextLetterWidth = 0;
             if (!linkedText.isAtEnd(tmp.getNext())) {
@@ -88,11 +91,7 @@ public class TextRenderer {
             }
 
             if (!group.getChildren().contains(tmp.getData())) {
-                if (!tmp.getData().getText().equals("ENTER")) textManipulator.addToGroup(tmp);
-                else {
-                    posX = 0;
-                }
-                //textManipulator.addToGroup(tmp);
+                textManipulator.addToGroup(tmp);
                 // Set cursor position when writing
                 positioner.updatePosition();
             }
@@ -101,7 +100,7 @@ public class TextRenderer {
             }
             else {
                 indexUpdater.startTheService();
-                linkedText.printAll();
+                //linkedText.printAll();
                 positioner.updatePosition();
                 return;
             }
@@ -130,6 +129,17 @@ public class TextRenderer {
 
         // Calculate coord X for the next letter
         newCoordX = initCoordX + (int)letterWidth;
+
+        // If next letter is new line (ENTER KEY)
+        if (node.getData().getText().equals("")) {
+            nodeAndCoords.setNode(node);
+            nodeAndCoords.setCoordX(0);
+            nodeAndCoords.setCoordY((initCoordY + (int) letterHeight));
+            //positioner.setCursorIsAtStart(true);
+            textManipulator.setLineCounter((textManipulator.getLineCounter()+1));
+            hashMapIdx.put(textManipulator.getLineCounter(), node);
+            return nodeAndCoords;
+        }
 
         // If next letter doesn't fit on the line:
         if (checkLineEnd(newCoordX, nextLetterWidth)) {
@@ -171,6 +181,7 @@ public class TextRenderer {
                 Node div = linkedText.insertAt_simplified(letter, curNode.getPrev().getPrev());
                 div.getData().setX(initCoordX);
                 div.getData().setY(initCoordY);
+                div.getData().setTextOrigin(VPos.TOP);
                 textManipulator.addToGroup(div);
                 // Add line to the counter
                 textManipulator.setLineCounter((textManipulator.getLineCounter()+1));
@@ -188,12 +199,6 @@ public class TextRenderer {
         }
         // If next letter fits on the line:
         else {
-            // If next letter is empty "" (ENTER KEY)
-            if (node.getData().getText().equals("ENTER")) {
-                nodeAndCoords.setCoordX(0);
-                nodeAndCoords.setCoordY((initCoordY + (int)letterHeight));
-                return nodeAndCoords;
-            }
             // Add next letter on the line
             nodeAndCoords.setCoordX(newCoordX);
             nodeAndCoords.setCoordY(initCoordY);

@@ -29,6 +29,7 @@ public class MyText extends Text implements SelectableNode {
     }
 
     private void selectAndNotify() {
+        // Background (rectangle) has to be linked to the bounds of the node
         ChangeListener<Bounds> changeListener = new ChangeListener<Bounds>() {
             @Override
             public void changed(ObservableValue<? extends Bounds> observableValue, Bounds oldBounds, Bounds newBounds) {
@@ -36,7 +37,6 @@ public class MyText extends Text implements SelectableNode {
                 background.setY(newBounds.getMinY());
                 background.setWidth(newBounds.getWidth());
                 background.setHeight(newBounds.getHeight());
-                //System.out.println("Bounds changed..." + oldBounds + " ...new bounds: " + newBounds);
             }
         };
         this.boundsInParentProperty().addListener(changeListener);
@@ -48,6 +48,7 @@ public class MyText extends Text implements SelectableNode {
     }
 
     @Override
+    // When selected, node changes background color (rectangle behind text node)
     public void notifySelection(boolean select) {
         if (select) {
             this.setFill(Color.WHITE);

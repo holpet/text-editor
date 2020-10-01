@@ -14,14 +14,14 @@ public class Clipboard {
         return selectedItems;
     }
 
-    public boolean select(SelectableNode n, boolean selected) {
-        if(n.requestSelection(selected)) {
+    public boolean select(SelectableNode node, boolean selected) {
+        if(node.requestSelection(selected)) {
             if (selected) {
-                selectedItems.add(n);
+                selectedItems.add(node);
             } else {
-                selectedItems.remove(n);
+                selectedItems.remove(node);
             }
-            n.notifySelection(selected);
+            node.notifySelection(selected);
             return true;
         } else {
             return false;

@@ -1,6 +1,12 @@
 package app.Controller;
 
+import app.Controller.Position.Positioner;
+import app.Controller.Text.CreateTextOnCommand;
+import app.Controller.Text.DeleteTextOnCommand;
+import app.Controller.Text.TextRenderer;
 import app.Model.*;
+import app.Model.Command.Command;
+import app.Model.Command.CommandList;
 import app.Model.Cursor;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
@@ -10,27 +16,27 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-
 import java.util.HashMap;
 
 
 public class KeyEventHandler implements EventHandler<KeyEvent> {
 
-    /** The Text to display on screen **/
     public LinkedList linkedText;
     public HashMap<MyText, Node> hashMap;
     public HashMap<Integer, Node> hashMapIdx;
     public int fontSize;
     public String fontName;
 
-    /** Other variables **/
     public Stage stage;
     public Scene scene;
     public Group group;
-    public Positioner positioner;
-    public TextRenderer textRenderer;
-    public Cursor cursor;
     public ScrollPane textWindow;
+    public Positioner positioner;
+    public Cursor cursor;
+
+    public CommandList commandList;
+
+    public TextRenderer textRenderer;
     private Boolean shiftStart;
 
     public KeyEventHandler(Stage stage, Scene scene, Group group, ScrollPane textWindow) {
@@ -43,11 +49,13 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
         this.linkedText = new LinkedList(hashMap, hashMapIdx);
         this.cursor = new Cursor(group);
         this.positioner = new Positioner(cursor, linkedText);
-        this.textRenderer = new TextRenderer(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap, hashMapIdx);
 
         this.fontSize = (int)cursor.getSampleLetter().getFont().getSize();
         this.fontName = cursor.getSampleLetter().getFont().getName();
+        this.commandList = new CommandList();
         this.shiftStart = false;
+
+        this.textRenderer = new TextRenderer(stage, scene, group, linkedText, positioner, cursor, textWindow, hashMap, hashMapIdx, commandList);
     }
 
     public void handleText() {
@@ -62,9 +70,16 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             String characterTyped = keyEvent.getCharacter();
             // Only include alphanumeric and special characters
             if (characterTyped.length() > 0 && characterTyped.matches("[\\w\\p{P}\\p{S}\\p{Space}]") &&
-                    !characterTyped.matches("[\\r|\\n]")) {
-                textRenderer.textManipulator.createLetter(characterTyped, fontName, fontSize);
+                    !characterTyped.matches("[\\r|\\n]") && !keyEvent.isControlDown()) {
+                //textRenderer.textManipulator.createLetter(characterTyped, fontName, fontSize);
+
+                /* Command for text creation */
+                Command textCommand = new CreateTextOnCommand(textRenderer.textManipulator, characterTyped,"INSERT-LETTER");
+                textCommand.execute();
+                commandList.addCommand("INSERT-LETTER", textCommand);
+
                 handleText();
+                textRenderer.textManipulator.handleScrollView();
             }
         }
         /** ARROW, CTRL, DELETE KEYS ETC. **/
@@ -76,14 +91,14 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
                 textRenderer.textManipulator.moveByLetter("UP", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
-                //textRenderer.textManipulator.handleScrollView("UP");
+                textRenderer.textManipulator.handleScrollView();
             }
             if (code == KeyCode.DOWN) {
                 handleShift(keyEvent);
                 textRenderer.textManipulator.moveByLetter("DOWN", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
-                //textRenderer.textManipulator.handleScrollView("DOWN");
+                textRenderer.textManipulator.handleScrollView();
             }
 
             if (code == KeyCode.LEFT) {
@@ -91,6 +106,7 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
                 textRenderer.textManipulator.moveByLetter("LEFT", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
+                textRenderer.textManipulator.handleScrollView();
             }
 
             if (code == KeyCode.RIGHT) {
@@ -98,18 +114,34 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
                 textRenderer.textManipulator.moveByLetter("RIGHT", keyEvent);
                 handleSelection(keyEvent);
                 handleText();
+                textRenderer.textManipulator.handleScrollView();
             }
 
             if (code == KeyCode.BACK_SPACE) {
-                textRenderer.textManipulator.deleteLetter("BACK_SPACE");
-                textRenderer.textManipulator.deleteSelection();
+                /* Command for text deletion */
+                Command textCommand = new DeleteTextOnCommand(textRenderer.textManipulator, "BACK_SPACE");
+                textCommand.execute();
+                commandList.addCommand("BACK_SPACE", textCommand);
+
+                //textRenderer.textManipulator.deleteLetter("BACK_SPACE");
+                //textRenderer.textManipulator.deleteSelection();
+
                 handleText();
+                textRenderer.textManipulator.handleScrollView();
             }
 
             if (code == KeyCode.DELETE) {
-                textRenderer.textManipulator.deleteLetter("DELETE");
-                textRenderer.textManipulator.deleteSelection();
+                /* Command for text deletion */
+                Command textCommand = new DeleteTextOnCommand(textRenderer.textManipulator, "DELETE");
+                textCommand.execute();
+                commandList.addCommand("DELETE", textCommand);
+
+                //textRenderer.textManipulator.deleteLetter("DELETE");
+                //textRenderer.textManipulator.deleteSelection();
+
                 handleText();
+                positioner.adjustUpdatedPosition();
+                textRenderer.textManipulator.handleScrollView();
             }
 
             if (code == KeyCode.SHIFT) {
@@ -119,9 +151,62 @@ public class KeyEventHandler implements EventHandler<KeyEvent> {
             }
 
             if (code == KeyCode.ENTER) {
-                //textRenderer.textManipulator.createLetter("ENTER", fontName, fontSize);
-                //handleText();
+                //textRenderer.textManipulator.createLetter("", fontName, fontSize);
+
+                /* Command for text creation */
+                Command textCommand = new CreateTextOnCommand(textRenderer.textManipulator, "","INSERT-LETTER");
+                textCommand.execute();
+                commandList.addCommand("INSERT-LETTER", textCommand);
+
+                handleText();
+                textRenderer.textManipulator.handleScrollView();
             }
+
+            if (code == KeyCode.ESCAPE || (code == KeyCode.F4 && keyEvent.isAltDown())) {
+                System.exit(0);
+            }
+
+            // COPY
+            if (code == KeyCode.C && keyEvent.isControlDown()) {
+                textRenderer.textManipulator.copyText();
+            }
+
+            // PASTE
+            if (code == KeyCode.V && keyEvent.isControlDown()) {
+                //textRenderer.textManipulator.insertText();
+
+                /* Command for text block insertion */
+                String text = textRenderer.textManipulator.getTextFromClipboard();
+                if (text == null) return;
+                Command textCommand = new CreateTextOnCommand(textRenderer.textManipulator, text,"INSERT-SELECTION");
+                textCommand.execute();
+                commandList.addCommand("INSERT-SELECTION", textCommand);
+
+                handleText();
+                textRenderer.textManipulator.handleScrollView();
+            }
+
+            // UNDO
+            if ((code == KeyCode.Z && keyEvent.isControlDown()) && !keyEvent.isShiftDown()) {
+                if (commandList.getCommand(false) == null) return;
+                commandList.getCommand(false).undo();
+                commandList.decreaseCurrentIndex();
+
+                handleText();
+                textRenderer.textManipulator.handleScrollView();
+            }
+
+            // REDO
+            if (code == KeyCode.Z && keyEvent.isControlDown() && keyEvent.isShiftDown()) {
+                commandList.increaseCurrentIndex();
+                if (commandList.getCommand(true) == null) return;
+                commandList.getCommand(true).redo();
+
+                handleText();
+                textRenderer.textManipulator.handleScrollView();
+            }
+
+
         }
 
         else if (keyEvent.getEventType() == KeyEvent.KEY_RELEASED) {

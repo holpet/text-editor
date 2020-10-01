@@ -1,4 +1,4 @@
-package app.Controller;
+package app.Controller.Position;
 
 import app.Model.Clipboard;
 import app.Model.Cursor;
@@ -32,16 +32,24 @@ public class Positioner {
             double posX = getCurrentNode().getData().getX();
             double posY = getCurrentNode().getData().getY();
             double letterWidth = getCurrentNode().getData().getLayoutBounds().getWidth();
-            double letterHeight = getCurrentNode().getData().getLayoutBounds().getHeight();
-            //letter minY = letterHeight+2 (cca 12)
+
             if (!getCursorIsAtStart()) {
                 cursor.changeCursorPos( (posX+letterWidth), (posY) );
             }
             else {
-                posX = 0;
+                if (getCurrentNode().getData().getX() == 0) {
+                    posX = 0;
+                }
                 cursor.changeCursorPos( (posX), (posY) );
             }
             change.setValue(true);
+        }
+    }
+
+    public void adjustUpdatedPosition() {
+        if (getCurrentNode().getData().getX() != 0 && getCursorIsAtStart()) {
+            setCursorIsAtStart(false);
+            setCurrentNode(getCurrentNode().getPrev());
         }
     }
 
