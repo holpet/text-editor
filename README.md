@@ -1,7 +1,7 @@
 # SIMPLE TEXT EDITOR
 Project is written in Java and is functionality and appearance wise similar to Windows Notepad, with a couple custom adjustments 
 (e.g. text dynamically resizes with the app window). It is built from scratch using JavaFX GUI library and following an MVC design pattern. <br />
-Other design pattern used in this project are e.g. command pattern - undo/redo options or observer pattern - text selection of letters (each letter changes background when selected).
+Other design patterns used in this project are e.g. command pattern - undo/redo options or observer pattern - text selection of letters (each letter changes background when selected).
 
 ![Demo](/src/app/View/demo.gif/)
 
