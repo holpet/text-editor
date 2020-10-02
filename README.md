@@ -11,4 +11,4 @@ for constant insert/delete TC O(1). Same TC O(1) of access goes for clicking on 
 Moving between lines (up and down) is TC O(n), n = number of letters in a line.<br /> 
 • Rendering of text happens in TC O(n) with each change to the text nodes in a linked list and/or resizing of window (together with the text content inside the pane).
 
-• HashMap and linked list both have SP of O(n), n = number of elements. 
+• HashMap and linked list both have SC of O(n), n = number of elements. 
