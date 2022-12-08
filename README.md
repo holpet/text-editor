@@ -5,9 +5,9 @@ Other design patterns used in this project are e.g. command pattern - undo/redo 
 ![Demo](/src/app/View/demo.gif/)
 
 <b>Textfield implementation (time/space complexity - TC/SC):</b> <br />
-• Each letter (node) is saved in a sequence into a linked list and accessed through a corresponding HashMap
+- Each letter (node) is saved in a sequence into a linked list and accessed through a corresponding HashMap
 for constant insert/delete TC O(1). Same TC O(1) of access goes for clicking on letters using mouse and moving cursor on the line.
 Moving between lines (up and down) is TC O(n), n = number of letters in a line.<br /> 
-• Rendering of text happens in TC O(n) with each change to the text nodes in a linked list and/or resizing of window (together with the text content inside the pane).
+- Rendering of text happens in TC O(n) with each change to the text nodes in a linked list and/or resizing of window (together with the text content inside the pane).
 
-• HashMap and linked list both have SC of O(n), n = number of elements. 
+- HashMap and linked list both have SC of O(n), n = number of elements. 
